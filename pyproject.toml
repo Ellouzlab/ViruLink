@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm", "pybind11"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ViruLink"
+version = "0.0.0"
+description = "A program to classify Caudoviricetes"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    {name = "Muhammad Sulman", email = "sulmanmu40@gmail.com"}
+]
+
+dependencies = [
+    "pandas>=2.0.0",
+    "biopython>=1.84",
+    "tqdm>=2.0.0",
+    "matplotlib>=3.0.0",
+    "numpy>=1.21.0",
+    "torch-geometric>=2.3.0",
+    "scikit-learn>=1.0.0",
+    "torch-sparse>=0.6.15",
+    "torch-cluster>=1.6.0",
+    "torch-spline-conv>=1.2.1",
+]
+
+[project.scripts]
+ViruLink = "ViruLink.main:main"
+
+[tool.setuptools]
+packages = ["ViruLink"]
