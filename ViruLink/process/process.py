@@ -1,5 +1,5 @@
-from ViraLink.search_utils import CreateDB, SearchDBs
-from ViraLink.utils import edge_list_to_presence_absence, compute_hypergeom_pvalues, create_graph, running_message
+from ViruLink.search_utils import CreateDB, SearchDBs
+from ViruLink.utils import edge_list_to_presence_absence, compute_hypergeom_pvalues, create_graph, running_message
 import os, logging, sys
 from glob import glob
 import pandas as pd
