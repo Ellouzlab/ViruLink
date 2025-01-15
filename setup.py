@@ -8,10 +8,10 @@ ext_modules = [
         ["ViruLink/random_walk/biased_random_walk.cpp"],
     ),
     Pybind11Extension(
-        "ViruLink.hypergeom.hypergeom",             # <-- The new module name
-        ["ViruLink/hypergeom/hypergeom.cpp"],       # <-- Our new C++ file
-        extra_compile_args=["-fopenmp"],            # For OpenMP
-        extra_link_args=["-fopenmp"],               # For OpenMP
+        "ViruLink.hypergeom.hypergeom",
+        ["ViruLink/hypergeom/hypergeom.cpp"],
+        extra_compile_args=["-fopenmp"],
+        extra_link_args=["-fopenmp"],
     ),
 ]
 
