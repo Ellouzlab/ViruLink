@@ -1,9 +1,9 @@
 import os
 import logging
 import pandas as pd
-from ViraLink.arguments import argparser
-from ViraLink.utils import init_logging
-from ViraLink.download.databases import database_info
+from ViruLink.arguments import argparser
+from ViruLink.utils import init_logging
+from ViruLink.download.databases import database_info
 
 
 def main():
@@ -11,7 +11,7 @@ def main():
     arguments = argparser(classes_df["Class"].to_list())
 
     if arguments.command == "download":
-        from ViraLink.download.download import DownloadHandler
+        from ViruLink.download.download import DownloadHandler
         logging_folder = f"{arguments.output}/logs"
         os.makedirs(logging_folder, exist_ok=True)
         os.makedirs(arguments.output, exist_ok=True)
@@ -19,7 +19,7 @@ def main():
         DownloadHandler(arguments, classes_df)
 
     if arguments.command == "process":
-        from ViraLink.process.process import ProcessHandler
+        from ViruLink.process.process import ProcessHandler
         log_path = f"{arguments.databases_loc}/logs"
         
         if not os.path.exists(log_path):
