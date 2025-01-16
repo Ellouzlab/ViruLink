@@ -36,6 +36,7 @@ setup(
         "torch-sparse>=0.6.15",
         "torch-cluster>=1.6.0",
         "torch-spline-conv>=1.2.1",
+        "gdown",
     ],
     python_requires=">=3.10",
     ext_modules=ext_modules,
