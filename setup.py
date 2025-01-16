@@ -24,6 +24,7 @@ setup(
     author_email="sulmanmu40@gmail.com",
     packages=find_packages(),
     include_package_data=True,
+    setup_requires=['torch'],
     install_requires=[
         "pandas>=2.0.0",
         "biopython>=1.84",
