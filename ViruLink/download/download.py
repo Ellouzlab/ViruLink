@@ -1,13 +1,13 @@
 import os
-import gdown
+import gdownrandom_walk
 import logging
 import sys
 import pandas as pd
 from glob import glob
 from tqdm import tqdm
 from Bio.Seq import Seq
-from ViraLink.download.vogdb import vogdb_download
-from ViraLink.utils import read_fasta, write_fasta
+from ViruLink.download.vogdb import vogdb_download
+from ViruLink.utils import read_fasta, write_fasta
 
 def fix_family(row):
     if pd.isna(row["Family_y"]) and not pd.isna(row["Family_x"]):
