@@ -1,5 +1,6 @@
 import argparse, os, sys
 from multiprocessing import cpu_count
+from pathlib import Path
 
 def verify(arguments):
     '''
@@ -30,6 +31,12 @@ def verify(arguments):
         if not databases_exist:
             print("Please download the databases first, or specify the correct location.")
             sys.exit(1)
+            
+    if arguments.command == "single_use":
+        if arguments.function not in ["prep_class_db", "split_train_test"]:
+            print("Please specify a valid function.")
+            print("Available functions:", ["prep_class_db", "split_train_test"])
+            sys.exit(1)
     
 
 
@@ -43,10 +50,11 @@ def argparser(classes):
     download_parser.add_argument("--vogdb", help="download VOGDB", action="store_true")
     download_parser.add_argument("--database", help="Specify which class database to download.", choices=classes, default=None)
     download_parser.add_argument("--unprocessed", help="download only unprocessed data", action="store_true")
-    download_parser.add_argument("--output", help="output directory", default="Databases")
+    download_parser.add_argument("--output", help="output directory", default=f"{Path.home()}/.cache/ViruLink")
     
     process_parser = subparsers.add_parser('process', help='Process database data for ViraLink (NOT REQUIRED IF YOU DOWNLOADED PROCESSED)')
-    process_parser.add_argument("--databases_loc", help="database to process", choices=classes, default="Databases")
+    process_parser.add_argument("--databases_loc", help=f"location of database to process default: {Path.home()}/.cache/ViruLink", choices=classes, default=f"{Path.home()}/.cache/ViruLink")
+    process_parser.add_argument("--mmseqs", help="use mmseqs for processing", action="store_true")
     process_parser.add_argument("--database", help="database to process", choices=classes, default=None)
     process_parser.add_argument("--all", help="output directory", action="store_true")
     process_parser.add_argument("--threads", help="number of threads to use", default=cpu_count(), type=int)
@@ -58,12 +66,14 @@ def argparser(classes):
     
     '''Not meant for general use, but for preparations of databases'''
     single_use_parser = subparsers.add_parser('single_use', help='Run a single use script, Not meant for general users')
-    single_use_parser.add_argument("--function", help="function to run", choices=["prep_class_db"], required=True)
-    single_use_parser.add_argument("--fasta", help="fasta file to process")
-    single_use_parser.add_argument("--ncbi_csv", help="NCBI CSV file to process")
-    single_use_parser.add_argument("--Acc2Assem", help="Accession to assembly csv")
-    single_use_parser.add_argument("--ictv_csv", help="ICTV CSV file for reference")
-    single_use_parser.add_argument("--output", help="output directory", default="Databases")
+    single_use_subparsers = single_use_parser.add_subparsers(dest='function', help='Single-use scripts')
+    prep_class_db_parser = single_use_subparsers.add_parser('prep_class_db', help='Prepare class database')
+    prep_class_db_parser.add_argument("--fasta", help="fasta file to process", required=True)
+    prep_class_db_parser.add_argument("--ncbi_csv", help="NCBI CSV file to process", required=True)
+    prep_class_db_parser.add_argument("--Acc2Assem", help="Accession to assembly csv", required=True)
+    prep_class_db_parser.add_argument("--ictv_csv", help="ICTV CSV file for reference", required=True)
+    prep_class_db_parser.add_argument("--output", help="output directory", default=f"{Path.home()}/.cache/ViruLink/class_db")
+    prep_class_db_parser.add_argument("--num_class", help="number of max assemblies per class", default=200)
     
     arguments = args.parse_args()
     verify(arguments)

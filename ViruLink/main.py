@@ -12,15 +12,14 @@ def main():
 
     if arguments.command == "download":
         from ViruLink.download.download import DownloadHandler
-        logging_folder = f"{arguments.output}/logs"
+        logging_folder = f"ViruLink_logs"
         os.makedirs(logging_folder, exist_ok=True)
         os.makedirs(arguments.output, exist_ok=True)
         init_logging(f"{logging_folder}/download.log")
         DownloadHandler(arguments, classes_df)
 
     if arguments.command == "process":
-        from ViruLink.process.process import ProcessHandler
-        log_path = f"{arguments.databases_loc}/logs"
+        log_path = f"ViruLink_logs"
         
         if not os.path.exists(log_path):
             print(f"Logs not found at {log_path}")
@@ -28,12 +27,22 @@ def main():
             print(f"Logs created at {log_path}")
             
         init_logging(f"{log_path}/process.log")
+        if arguments.mmseqs:
+            from ViruLink.process.mmseqs_process import ProcessHandler
+        else:
+            from ViruLink.process.process import ProcessHandler
+        
         ProcessHandler(arguments, classes_df)
+        
         
     if arguments.command == "single_use":
         if arguments.function == "prep_class_db":
-            from ViraLink.single_use_scripts.prep_class_db import prepare_class_db
-            prepare_class_db(arguments)
+            logging_folder = f"ViruLink_logs"
+            os.makedirs(arguments.output, exist_ok=True)
+            os.makedirs(logging_folder, exist_ok=True)
+            init_logging(f"{logging_folder}/prep_class_db.log")
+            from ViruLink.single_use_scripts.make_class_db import make_class_db
+            make_class_db(arguments)
 
 if __name__ == "__main__":
     main()

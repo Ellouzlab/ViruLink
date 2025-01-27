@@ -1,5 +1,5 @@
 import os
-import gdownrandom_walk
+import gdown
 import logging
 import sys
 import pandas as pd
@@ -22,8 +22,9 @@ def EnrichCsv(ncbi_df, ictv_csv):
     # Deduplicate ICTV DataFrame
     ictv_df = ictv_df.drop_duplicates(subset=["Genus", "Family"])
     
-    ncbi_df["Genus"] = ncbi_df["Genus"].map(lambda x: x if not pd.isnull(x) else "Unknown")
-    ncbi_df["Family"] = ncbi_df["Family"].map(lambda x: x if not pd.isnull(x) else "Unknown")
+    ncbi_df.loc[:, "Genus"] = ncbi_df["Genus"].map(lambda x: x if not pd.isnull(x) else "Unknown")
+    ncbi_df.loc[:, "Family"] = ncbi_df["Family"].map(lambda x: x if not pd.isnull(x) else "Unknown")
+
     
     ncbi_mask = (~(ncbi_df["Family"] == "Unknown")) & (ncbi_df["Genus"] == "Unknown")
     ncbi_only_fam = ncbi_df[ncbi_mask]
@@ -46,7 +47,7 @@ def EnrichCsv(ncbi_df, ictv_csv):
 
     
 
-def ClassDownloadProcessor(class_outpath, folder, ictv_path):
+def ClassDownloadProcessor(class_outpath, ictv_path):
     csv_paths = glob(f"{class_outpath}/*.csv")
     
     initial_csv = [csv for csv in csv_paths if not "complete" in csv]
@@ -101,20 +102,19 @@ def GoogleDownload(url, output_dir):
     gdown.download_folder(url,output=output_dir,quiet=False)
     logging.info(f"Downloaded {url} to {output_dir}")
 
-def PreparingDownload(row, output_dir, unprocessed, ictv_path):
+def PreparingDownload(row, output_dir, ictv_path):
     to_download = {"unprocessed": row["Unprocessed_url"]}
-    if not unprocessed:
-        to_download["processed"] = row["Processed_url"]
     
     class_path = os.path.join(output_dir, row["Class"])
-    os.makedirs(class_path, exist_ok=True)
+    
     
     for folder, url in to_download.items():
         logging.info(f"Downloading {row['Class']} {folder} data.")
-        class_outpath = os.path.join(class_path, folder)
-        if not os.path.exists(class_outpath):
-            GoogleDownload(url, class_outpath)
-        ClassDownloadProcessor(class_outpath, folder, ictv_path)
+        class_outpath = os.path.join(class_path) # no seperate for unprocessed and processed data.
+        if not os.path.exists(class_outpath) or os.path.getsize(class_outpath) == 0:
+            os.makedirs(class_path, exist_ok=True)
+            GoogleDownload(url, class_outpath) 
+        ClassDownloadProcessor(class_outpath, ictv_path)
 
 def DownloadHandler(arguments, classes_df):
     vogdb_url = "https://fileshare.csb.univie.ac.at/vog/vog227/vog.faa.tar.gz"
@@ -128,7 +128,7 @@ def DownloadHandler(arguments, classes_df):
     # Download the VOG database
     if arguments.all or arguments.vogdb:
         vogdb_dir = os.path.join(arguments.output, "VOGDB")
-        vogdb_unproc_dir = os.path.join(vogdb_dir, "unprocessed")
+        vogdb_unproc_dir = vogdb_dir # keeping same directory for now.
 
         # Download if vogdb command invoked.
         if not os.path.exists(vogdb_unproc_dir) or arguments.vogdb:
@@ -137,9 +137,10 @@ def DownloadHandler(arguments, classes_df):
             vogdb_download(vogdb_url, vogdb_unproc_dir)
     
     if arguments.all:
-        classes_df.apply(PreparingDownload, axis=1, args=(arguments.output, arguments.unprocessed, ictv_path))
+        classes_df.apply(PreparingDownload, axis=1, args=(arguments.output, ictv_path))
     
     if not arguments.database==None:
         for class_name in arguments.database:
             row = classes_df[classes_df["Class"]==arguments.database].iloc[0]
-            PreparingDownload(row, arguments.output, arguments.unprocessed)
+            PreparingDownload(row, arguments.output, ictv_path)
+            break

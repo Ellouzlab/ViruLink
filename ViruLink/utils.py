@@ -208,7 +208,7 @@ def edge_list_to_presence_absence(edge_list_path):
 
 
 def compute_hypergeom_pvalues(pa_matrix: pd.DataFrame, nthreads: int = 1) -> pd.DataFrame:
-    from ViraLink.hypergeom import hypergeom
+    from ViruLink.hypergeom import hypergeom
     """
     Given a presence-absence DataFrame (rows = genomes, columns = proteins),
     compute the pairwise hypergeometric p-values (directly computed in C++),
@@ -332,7 +332,7 @@ def make_all_nodes_list(label_to_id):
 
 def run_biased_random_walk(row_int, col_int, weights_float, start_nodes,
                            walk_length=10, p=1.0, q=1.0, num_threads=1, walks_per_node=1):
-    from ViraLink.random_walk import biased_random_walk
+    from ViruLink.random_walk import biased_random_walk
     """
     Wrap the C++ random_walk call. Returns a list of walks (each is a list of int node IDs).
     """

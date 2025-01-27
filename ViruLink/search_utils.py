@@ -1,5 +1,5 @@
 import logging, sys, os
-from ViraLink.utils import run_command
+from ViruLink.utils import run_command
 
 def CreateDB(fasta_file: str, db_name: str, type: int = 0, force: bool = False):
     '''
@@ -55,4 +55,12 @@ def DiamondCreateDB(fasta_file: str, db_name: str, force: bool = False):
         logging.info(f"Created database {db_name} from {fasta_file}")
     else:
         logging.info(f"Database {db_name} already exists. Use --force to overwrite.")
+        
+def DiamondSearchDB(VOGDB_dmnd, query, outdir, threads):
+
+    outfile = f"{outdir}/network.m8"
+    if not os.path.exists(outfile) or os.path.getsize(outfile) == 0:
+        cmd = f"diamond blastx --fast --db {VOGDB_dmnd} --threads {threads} --query {query} --out {outfile} --outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore"
+        run_command(cmd)
+    return outfile
 
