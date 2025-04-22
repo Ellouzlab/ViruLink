@@ -177,7 +177,20 @@ def read_fasta(fastafile):
 def write_fasta(sequences, outpath):
     with open(outpath, "w") as fasta_out:
         SeqIO.write(sequences, fasta_out, "fasta")
-        
+
+def get_file_path(unproc_path, ext, multi=False):
+    from glob import glob
+    all_paths = glob(f"{unproc_path}/*.{ext}")
+    if not multi:
+        if len(all_paths) == 0:
+            logging.error(f"No {ext} files found in {unproc_path}")
+            sys.exit(1)
+        elif len(all_paths) > 1:
+            logging.error(f"Multiple {ext} files found in {unproc_path}")
+            sys.exit(1)
+        else:
+            return all_paths[0]
+    return all_paths
 
 def edge_list_to_presence_absence(edge_list_path):
     """

@@ -1,5 +1,6 @@
-from ViruLink.search_utils import DiamondCreateDB, DiamondSearchDB
-from ViruLink.utils import edge_list_to_presence_absence, compute_hypergeom_pvalues, create_graph, running_message
+from ViruLink.search_utils import DiamondCreateDB, DiamondSearchDB, CreateANISketchFolder, ANIDist
+from ViruLink.utils import edge_list_to_presence_absence, compute_hypergeom_pvalues, create_graph, running_message, get_file_path
+from ViruLink.download.databases import database_info
 import os, logging, sys
 from glob import glob
 import pandas as pd
@@ -31,21 +32,10 @@ def get_paths_dict(databases_loc, classes_df):
     
     return path_to_unprocs
 
-def get_seqs_path(unproc_path):
-    fasta_paths = glob(f"{unproc_path}/*.fasta") + glob(f"{unproc_path}/*.faa")
-    
-    if len(fasta_paths) == 0:
-        logging.error(f"No FASTA files found in {unproc_path}")
-        sys.exit(1)
-    elif len(fasta_paths) > 1:
-        logging.error(f"Multiple FASTA files found in {unproc_path}")
-        sys.exit(1)
-    else:
-        return fasta_paths[0]
 
 def generate_database(class_data, unproc_path):
     db_outpath = f"{unproc_path}/{class_data}"
-    DiamondCreateDB(get_seqs_path(unproc_path), db_outpath, force=True)
+    DiamondCreateDB(get_file_path(unproc_path,"faa"), db_outpath, force=True)
     return db_outpath
 
 def m8_processor(m8_file, class_data, eval_threshold, bitscore_threshold, edge_list_path):
@@ -72,12 +62,9 @@ def m8_processor(m8_file, class_data, eval_threshold, bitscore_threshold, edge_l
         logging.info(f"Edge list already exists at {edge_list_path}")
         return edge_list_path
 
-
-
-
 def ProcessHandler(arguments, classes_df):
     paths_to_unprocs = get_paths_dict(arguments.databases_loc, classes_df)
-    
+    database_parameter = database_info()
     if arguments.all:
         
         VOGDB_path = paths_to_unprocs["VOGDB"]
@@ -88,15 +75,8 @@ def ProcessHandler(arguments, classes_df):
             if class_data == "VOGDB":
                 continue
             else:
-                fasta=glob(f"{unproc_path}/*.fasta")
-                if len(fasta) == 0:
-                    logging.error(f"No FASTA files found in {unproc_path}")
-                    sys.exit(1)
-                elif len(fasta) > 1:
-                    logging.error(f"Multiple FASTA files found in {unproc_path}")
-                    sys.exit(1)
-                    
-                fasta_path = fasta[0]
+                fasta_path=get_file_path(unproc_path, "fasta")
+
                 m8_files[class_data] = DiamondSearchDB(VOGDB_dmnd, fasta_path, unproc_path, arguments.threads)
         
         for class_data, m8_file in m8_files.items():    
@@ -115,3 +95,41 @@ def ProcessHandler(arguments, classes_df):
                 pval = compute_hypergeom_pvalues(pa, arguments.threads)
                 sources, destinations, weights = create_graph(pval, threshold = -math.log10(0.05))
                 pd.DataFrame({"source": sources, "target": destinations, "weight": weights}).to_csv(f"{arguments.databases_loc}/{class_data}/hypergeom_edges.csv", index=False)
+            else:
+                logging.info(f"Hypergeom edges already exist at {out_hypergeom_edges}")
+                # Load the existing edges
+                edges = pd.read_csv(out_hypergeom_edges)
+                
+                '''
+                # Draw the taxonomic subgraphs
+                
+                from ViruLink.visualizations import draw_taxonomic_subgraphs
+                draw_taxonomic_subgraphs(edges, 1000, seed=42)
+                '''
+                
+        for database, database_path in paths_to_unprocs.items():
+            if database == "VOGDB":
+                continue
+            else:
+                ANI_sketch_folder = f"{database_path}/ANI_sketch"
+                fasta_path = get_file_path(database_path, "fasta")
+                
+                # Get the sketch mode from the database_parameter
+                parameters = database_parameter[database_parameter["Class"]==database]
+                skani_sketch_mode = parameters["skani_sketch_mode"].values[0]
+                skani_dist_mode = parameters["skani_dist_mode"].values[0]
+                
+                logging.info(f"Creating ANI sketches for {database} in {ANI_sketch_folder} using {skani_sketch_mode} mode.")
+                sketch_paths_txt = CreateANISketchFolder(fasta_path, ANI_sketch_folder, arguments.threads, skani_sketch_mode)
+                
+                logging.info(f"Calculating ANI distances for {database} using {skani_dist_mode} mode.")
+                output_path = f"{database_path}/self_ANI.tsv"
+                ANI_edges = ANIDist(sketch_paths_txt, sketch_paths_txt, output_path, arguments.threads, skani_dist_mode)
+                
+                '''
+                # Draw the taxonomic subgraphs
+                
+                from ViruLink.visualizations import draw_taxonomic_subgraphs
+                draw_taxonomic_subgraphs(edges, 1000, seed=42)
+                '''
+                

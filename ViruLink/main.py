@@ -33,6 +33,18 @@ def main():
             from ViruLink.process.process import ProcessHandler
         
         ProcessHandler(arguments, classes_df)
+    
+    if arguments.command == "test":
+        log_path = f"ViruLink_logs"
+        
+        if not os.path.exists(log_path):
+            print(f"Logs not found at {log_path}")
+            os.makedirs(log_path, exist_ok=True)
+            print(f"Logs created at {log_path}")
+        
+        init_logging(f"{log_path}/test.log")
+        from ViruLink.test.test import TestHandler
+        TestHandler(arguments)
         
         
     if arguments.command == "single_use":

@@ -2,18 +2,24 @@ from setuptools import setup, find_packages, Extension
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 
 # Define the C++ extension module
+
 ext_modules = [
     Pybind11Extension(
         "ViruLink.random_walk.biased_random_walk",
-        ["ViruLink/random_walk/biased_random_walk.cpp"],
-    ),
+        ["ViruLink/random_walk/biased_random_walk.cpp"]),
     Pybind11Extension(
         "ViruLink.hypergeom.hypergeom",
         ["ViruLink/hypergeom/hypergeom.cpp"],
         extra_compile_args=["-fopenmp"],
-        extra_link_args=["-fopenmp"],
-    ),
+        extra_link_args=["-fopenmp"]),
+    # >>> NEW EXTENSION <<<
+    Pybind11Extension(
+        "ViruLink.relations.relationship_edges_cpp",
+        ["ViruLink/relations/relationship_edges.cpp"],
+        extra_compile_args=["-O3", "-march=native", "-fopenmp"],
+        extra_link_args=["-fopenmp"]),
 ]
+
 
 # Package setup
 setup(

@@ -6,7 +6,7 @@ def verify(arguments):
     '''
     Verify the arguments passed to the program.
     '''
-    subcommands = ["download", "process", "single_use"]
+    subcommands = ["download", "process","test" ,"single_use"]
     if arguments.command not in subcommands:
         print("Please specify a valid command.")
         print("Available commands:", subcommands)
@@ -22,6 +22,17 @@ def verify(arguments):
             sys.exit(1)
     
     if arguments.command == "process":
+        print("Please note, processing the databases is not required if you have downloaded the processed databases.")
+        if not arguments.all and arguments.database==None:
+            print("Please specify either --all or use the --database flag.")
+            sys.exit(1)
+        
+        databases_exist = os.path.exists(arguments.databases_loc)
+        if not databases_exist:
+            print("Please download the databases first, or specify the correct location.")
+            sys.exit(1)
+            
+    if arguments.command == "test":
         print("Please note, processing the databases is not required if you have downloaded the processed databases.")
         if not arguments.all and arguments.database==None:
             print("Please specify either --all or use the --database flag.")
@@ -62,7 +73,11 @@ def argparser(classes):
     process_parser.add_argument("--bitscore", help="bitscore to use", default=50, type=int)
     process_parser.add_argument("--eval", help="evalue to use", default=0.00001, type=float)
     
-    
+    test_parser = subparsers.add_parser('test', help='Run Tests')
+    test_parser.add_argument("--databases_loc", help=f"location of database to process default: {Path.home()}/.cache/ViruLink", choices=classes, default=f"{Path.home()}/.cache/ViruLink")
+    test_parser.add_argument("--database", help="database to process", choices=classes, default=None)
+    test_parser.add_argument("--all", help="output directory", action="store_true")
+    test_parser.add_argument("--threads", help="number of threads to use", default=cpu_count(), type=int)
     
     '''Not meant for general use, but for preparations of databases'''
     single_use_parser = subparsers.add_parser('single_use', help='Run a single use script, Not meant for general users')

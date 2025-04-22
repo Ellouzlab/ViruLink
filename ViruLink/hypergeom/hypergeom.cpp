@@ -1,6 +1,9 @@
+/********************************************************************
+ *  hypergeom.cpp  —  compute shared‑protein edge weights
+ *                   (raw hypergeometric p‑value gate + %shared PCs)
+ *******************************************************************/
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
-#include <pybind11/stl.h>
 #include <vector>
 #include <cmath>
 #include <algorithm>
@@ -12,144 +15,135 @@
 
 namespace py = pybind11;
 
-// -----------------------------------------------------------------------------
-// 1. Bitset Representation
-//    Convert the input N×M boolean array (row-major) into a vector of bitset
-//    representations to speed up intersection counting.
-// -----------------------------------------------------------------------------
-static std::vector<std::vector<uint64_t>> build_bitset_representation(const bool* data_ptr, int N, int M) {
-    int blocks = (M + 63) / 64;
-    std::vector<std::vector<uint64_t>> bitrows(N, std::vector<uint64_t>(blocks, 0ULL));
-
-    // Optionally, you can parallelize this loop if N is very large.
+/* ---------- 1. helpers (unchanged) -------------------------------- */
+static std::vector<std::vector<uint64_t>>
+build_bitset_representation(const bool* data_ptr,int N,int M){
+    int blocks=(M+63)/64;
+    std::vector<std::vector<uint64_t>> bitrows(N,std::vector<uint64_t>(blocks));
 #ifdef _OPENMP
     #pragma omp parallel for schedule(dynamic)
 #endif
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < M; j++) {
-            if (data_ptr[i * M + j]) {
-                int block_idx = j / 64;
-                int bit_idx = j % 64;
-                bitrows[i][block_idx] |= (1ULL << bit_idx);
+    for(int i=0;i<N;i++)
+        for(int j=0;j<M;j++)
+            if(data_ptr[i*M+j]){
+                int b=j>>6;                 // j/64
+                int k=j&63;                 // j%64
+                bitrows[i][b]|=(1ULL<<k);
             }
-        }
-    }
     return bitrows;
 }
 
-// -----------------------------------------------------------------------------
-// 2. 64-bit Popcount
-// -----------------------------------------------------------------------------
-static inline int popcount_64(uint64_t x) {
+static inline int popcount_64(uint64_t x){
 #if defined(__GNUC__) || defined(__clang__)
     return __builtin_popcountll(x);
 #elif defined(_MSC_VER)
     return __popcnt64(x);
 #else
-    int count = 0;
-    while (x) {
-        x &= (x - 1);
-        count++;
-    }
-    return count;
+    int c=0; while(x){x&=x-1; ++c;} return c;
 #endif
 }
 
-// -----------------------------------------------------------------------------
-// 3. Count Intersection Between Two Bitset Rows
-// -----------------------------------------------------------------------------
-static inline int count_intersection(const std::vector<uint64_t>& rowi, const std::vector<uint64_t>& rowj) {
-    int blocks = static_cast<int>(rowi.size());
-    int intersect = 0;
-    for (int b = 0; b < blocks; b++) {
-        uint64_t and_val = rowi[b] & rowj[b];
-        intersect += popcount_64(and_val);
-    }
-    return intersect;
+static inline int count_intersection(const std::vector<uint64_t>& a,
+                                     const std::vector<uint64_t>& b){
+    int blocks=a.size(), s=0;
+    for(int i=0;i<blocks;i++) s+=popcount_64(a[i]&b[i]);
+    return s;
 }
 
-// -----------------------------------------------------------------------------
-// 4. Main Function: compute_hypergeom
-//
-// Input:  matrix_in is an N x M boolean NumPy array (rows = genomes, columns = PCs)
-// Output: Returns an N x N NumPy array (double) where element [i,j] is the raw
-//         hypergeometric p-value computed between genome i and genome j.
-// -----------------------------------------------------------------------------
-py::array_t<double> compute_hypergeom(py::array_t<bool> matrix_in, int nthreads = 1) {
-    // Check input dimensions.
+/* ---------- 2. main kernel ---------------------------------------- */
+/**
+ *  compute_hypergeom
+ *
+ *  @param matrix_in   N×M bool (presence/absence)
+ *  @param nthreads    OpenMP threads  (default 1)
+ *  @param pval_thresh P‑value cut‑off (default 0.01)
+ *
+ *  @return  N×N double matrix whose entry (i,j) is
+ *           0                               if p >  pval_thresh
+ *           shared_pc_percent ∈ [0,1]       if p <= pval_thresh
+ */
+py::array_t<double>
+compute_hypergeom(py::array_t<bool> matrix_in,
+                  int nthreads                 = 1,
+                  double pval_thresh           = 0.01)
+{
+    /* --- dimension checks --------------------------------------- */
     py::buffer_info buf = matrix_in.request();
-    if (buf.ndim != 2)
-        throw std::runtime_error("Input must be a 2D (N x M) array.");
+    if(buf.ndim!=2) throw std::runtime_error("matrix must be 2‑D");
     int N = static_cast<int>(buf.shape[0]);
     int M = static_cast<int>(buf.shape[1]);
     const bool* data_ptr = static_cast<const bool*>(buf.ptr);
 
-    // Build bitset representation and compute row sums.
-    auto bitrows = build_bitset_representation(data_ptr, N, M);
-    std::vector<int> row_sums(N, 0);
-    for (int i = 0; i < N; i++) {
-        int sum = 0;
-        for (auto block : bitrows[i])
-            sum += popcount_64(block);
-        row_sums[i] = sum;
+    /* --- bitset + row sums -------------------------------------- */
+    auto bitrows   = build_bitset_representation(data_ptr,N,M);
+    std::vector<int> row_sums(N);
+    for(int i=0;i<N;i++){
+        int s=0; for(auto blk:bitrows[i]) s+=popcount_64(blk);
+        row_sums[i]=s;
     }
 
-    // Precompute lgamma table for numbers 0..M (we use lgamma(x+1) for x!)
-    std::vector<double> lgamma_table(M + 1, 0.0);
-    for (int i = 0; i <= M; i++) {
-        lgamma_table[i] = std::lgamma(i + 1.0);
-    }
-    // Precompute constant part for denominator: lgamma(M+1) is lgamma_table[M]
-    // We define an inline lambda for hypergeometric p-value computation.
-    auto hypergeom_func = [&lgamma_table, M](int c, int a, int b) -> double {
-        // Compute: log(C(M, b)) = lgamma(M+1) - lgamma(b+1) - lgamma(M - b + 1)
-        double log_denom = lgamma_table[M] - lgamma_table[b] - lgamma_table[M - b];
-        double p_sum = 0.0;
-        int max_i = std::min(a, b);
-        for (int i = c; i <= max_i; i++) {
-            // Compute log(C(a, i)) = lgamma(a+1) - lgamma(i+1) - lgamma(a-i+1)
-            // and    log(C(M - a, b - i)) = lgamma(M - a + 1) - lgamma(b-i+1) - lgamma(M - a - (b-i) + 1)
-            double log_num = (lgamma_table[a] - lgamma_table[i] - lgamma_table[a - i]) +
-                             (lgamma_table[M - a] - lgamma_table[b - i] - lgamma_table[M - a - (b - i)]);
-            p_sum += std::exp(log_num - log_denom);
+    /* --- lgamma table for log‑combinatorics --------------------- */
+    std::vector<double> lg(M+1);
+    for(int i=0;i<=M;i++) lg[i]=std::lgamma(i+1.0);
+
+    auto logC=[&lg](int n,int k)->double{
+        return lg[n]-lg[k]-lg[n-k];
+    };
+    auto hypergeom_p=[&](int c,int a,int b)->double{
+        /* p‑value = Σ_{i=c}^{min(a,b)}  [ C(a,i) C(M-a, b-i) ] / C(M,b) */
+        double log_denom = logC(M,b);
+        double p=0.0;
+        int max_i=std::min(a,b);
+        for(int i=c;i<=max_i;i++){
+            double log_num = logC(a,i)+logC(M-a,b-i);
+            p += std::exp(log_num-log_denom);
         }
-        return p_sum;
+        return p;
     };
 
-    // Allocate the output dense matrix as a flat vector of length N*N.
-    std::vector<double> out_vals(N * N, 0.0);
+    /* --- allocate output ---------------------------------------- */
+    std::vector<double> out(N*N,0.0);
 
 #ifdef _OPENMP
-    if (nthreads > 0)
-        omp_set_num_threads(nthreads);
+    if(nthreads>0) omp_set_num_threads(nthreads);
 #endif
-
-    // For every pair (i, j), compute the hypergeometric p-value.
-    // We use the upper triangle and mirror the value to the lower triangle.
 #pragma omp parallel for schedule(dynamic)
-    for (int i = 0; i < N; i++) {
-        for (int j = i; j < N; j++) {
-            int intersect = count_intersection(bitrows[i], bitrows[j]);
-            double pval = hypergeom_func(intersect, row_sums[i], row_sums[j]);
-            out_vals[i * N + j] = pval;
-            out_vals[j * N + i] = pval;
+    for(int i=0;i<N;i++){
+        for(int j=i;j<N;j++){
+            int  c     = count_intersection(bitrows[i],bitrows[j]);
+            int  a     = row_sums[i];
+            int  b     = row_sums[j];
+            double p   = hypergeom_p(c,a,b);
+
+            double w   = 0.0;
+            if(p <= pval_thresh && c>0){
+                w = static_cast<double>(c) /
+                    static_cast<double>(std::min(a,b));   // shared‑PC %
+            }
+            out[i*N+j]=out[j*N+i]=w;
         }
     }
 
-    // Wrap the flat vector into an N x N NumPy array.
-    auto result = py::array_t<double>({N, N});
-    py::buffer_info buf_out = result.request();
-    double* out_ptr = static_cast<double*>(buf_out.ptr);
-    std::memcpy(out_ptr, out_vals.data(), N * N * sizeof(double));
+    /* --- wrap into NumPy ---------------------------------------- */
+    py::array_t<double> result({N,N});
+    std::memcpy(result.mutable_data(), out.data(), sizeof(double)*N*N);
     return result;
 }
 
-// -----------------------------------------------------------------------------
-// 5. Module Definition
-// -----------------------------------------------------------------------------
-PYBIND11_MODULE(hypergeom, m) {
-    m.doc() = "Compute raw hypergeometric p-values from a presence–absence matrix based on protein sharing.";
+/* ---------- 3. module export ------------------------------------ */
+PYBIND11_MODULE(hypergeom, m){
+    m.doc()="Shared‑protein edge weights (hypergeom gate)";
     m.def("compute_hypergeom", &compute_hypergeom,
-          py::arg("matrix_in"), py::arg("nthreads") = 1,
-          "Compute raw hypergeometric p-values between all genome pairs in a 2D bool array.");
+          py::arg("matrix_in"),
+          py::arg("nthreads")    = 1,
+          py::arg("pval_thresh") = 0.01,
+          R"pbdoc(
+Compute an N×N matrix where entry (i,j) is
+
+    shared_protein_percent = intersect / min(k_i , k_j)   if p ≤ pval_thresh
+    0.0                                                       otherwise
+
+The p‑value is the raw cumulative hypergeometric test on the
+presence/absence matrix of protein clusters (rows = genomes,
+columns = PCs).)pbdoc");
 }
