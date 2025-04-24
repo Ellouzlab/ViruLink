@@ -18,6 +18,11 @@ ext_modules = [
         ["ViruLink/relations/relationship_edges.cpp"],
         extra_compile_args=["-O3", "-march=native", "-fopenmp"],
         extra_link_args=["-fopenmp"]),
+    Pybind11Extension(
+        "ViruLink.sampler.triangle_sampler_cpp",
+        ["ViruLink/sampler/triangle_sampler.cpp"],
+        extra_compile_args=["-O3", "-march=native", "-fopenmp"],
+        extra_link_args=["-fopenmp"]),
 ]
 
 
