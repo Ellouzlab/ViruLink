@@ -24,7 +24,7 @@ Currently, only performance can be tested. I have not yet set up an easy method 
 1. Get help:
    
 	`ViruLink -h`
-3. Download all databases:
+3. Download all databases to .cache:
    
 	`ViruLink download --all`
 5. Process databases and build ANI and hypergeometric graphs:
@@ -34,7 +34,7 @@ Currently, only performance can be tested. I have not yet set up an easy method 
    
 	`ViruLink test --all`
 
-Please check ViruLink/ViruLink/setup/score_profiles to change what ranks can be predicted. Currently, the code in this repository will not lead to performance tests using the Evo2 encoder. 
+Please check ViruLink/ViruLink/setup/score_profiles to change what ranks can be predicted. Currently, the code in this repository will not lead to performance tests using the Evo2 encoder. Code only works on linux systems.
 
 ### Contact
 Muhammad Sulman: sulmanmu40@gmail.com
