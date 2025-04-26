@@ -1,7 +1,7 @@
-## ViruLink
+# ViruLink
 A tool to classify Viruses (or at the moment, only Caudoviricetes)
 
-#### Download/Installation
+### Download/Installation
 1. Clone this repository:
    
 	`git clone https://github.com/Ellouzlab/ViruLink.git`
@@ -19,7 +19,7 @@ A tool to classify Viruses (or at the moment, only Caudoviricetes)
 	`python -m pip install -e .`
 
 
-#### Usage
+### Usage
 Currently, only performance can be tested. I have not yet set up an easy method to classify viruses
 1. Get help:
 	`ViruLink -h`
@@ -32,5 +32,5 @@ Currently, only performance can be tested. I have not yet set up an easy method 
 
 Please check ViruLink/ViruLink/setup/score_profiles to change what ranks can be predicted. Currently, the code in this repository will not lead to performance tests using the Evo2 encoder. 
 
-#### Contact
+### Contact
 Muhammad Sulman: sulmanmu40@gmail.com
