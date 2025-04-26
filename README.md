@@ -22,12 +22,16 @@ A tool to classify Viruses (or at the moment, only Caudoviricetes)
 ### Usage
 Currently, only performance can be tested. I have not yet set up an easy method to classify viruses outside of the databases
 1. Get help:
+   
 	`ViruLink -h`
-2. Download all databases:
+3. Download all databases:
+   
 	`ViruLink download --all`
-3. Process databases and build ANI and hypergeometric graphs:
+5. Process databases and build ANI and hypergeometric graphs:
+   
 	`ViruLink process --all`
-4. Run performance tests:
+7. Run performance tests:
+   
 	`ViruLink test --all`
 
 Please check ViruLink/ViruLink/setup/score_profiles to change what ranks can be predicted. Currently, the code in this repository will not lead to performance tests using the Evo2 encoder. 
