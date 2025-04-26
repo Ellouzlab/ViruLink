@@ -36,5 +36,5 @@ Currently, only performance can be tested. I have not yet set up an easy method 
 
 Please check ViruLink/ViruLink/setup/score_profiles to change what ranks can be predicted. Currently, the code in this repository will not lead to performance tests using the Evo2 encoder. Code only works on linux systems.
 
-### Contact/Maintainer
-Muhammad Sulman: sulmanmu40@gmail.com
+### Contacts
+Creator: Muhammad Sulman(sulmanmu40@gmail.com)
