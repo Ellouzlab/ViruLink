@@ -44,7 +44,9 @@ def main():
             print(f"Logs created at {log_path}")
         
         init_logging(f"{log_path}/test.log")
-        from ViruLink.test.test import TestHandler
+        arguments.evo2_embeddings =  '/home/sulman/Desktop/ViruLink/testing_evo2'
+        arguments.best_layer = None
+        from ViruLink.test.test_evo import TestHandler
         TestHandler(arguments)
         
         

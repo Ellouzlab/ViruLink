@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # --------------------------------------------------------------------------
 # Ordinal-relationship prediction (pair-wise, interval-censored)
-# Node2Vec embeddings + raw ANI/HYP edge features
+# Features: Node2Vec embeddings only (no ANI/HYP scalars)
 # --------------------------------------------------------------------------
 import logging, random, sys
 from pathlib import Path
@@ -28,44 +28,21 @@ BATCH_SIZE    = 1024
 LR            = 1e-3
 NUM_PER_CLASS = 4000
 EMBED_DIM     = parameters["embedding_dim"]
-COMB_DIM      = EMBED_DIM * 2
-EXTRA_METRICS = True          # print hierarchical metrics
+COMB_DIM      = EMBED_DIM * 2          # ANI-emb ⊕ HYP-emb
+EXTRA_METRICS = True                   # hierarchical statistics
 
 # ---------- rank helpers -------------------------------------------------
 LEVEL2RANK = {lvl: r for r, lvl in enumerate(score_config["Caudoviricetes"])}
 K_CLASSES  = max(LEVEL2RANK.values()) + 1
 NR_CODE    = LEVEL2RANK["NR"]
-RANK2LEVEL = {r: l for l, r in LEVEL2RANK.items()}
 
 # ---------- device & RNG -------------------------------------------------
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.manual_seed(RNG_SEED); random.seed(RNG_SEED); np.random.seed(RNG_SEED)
 
 # ======================================================================
-# 1.  Node2Vec helpers
+# 0.  Edge-table sanitising helpers (unchanged)
 # ======================================================================
-def run_walk(df: pd.DataFrame, thr: int):
-    r,c,wf,l2id,id2l = prepare_edges_for_cpp(df["source"], df["target"], df["weight"])
-    walks = run_biased_random_walk(
-        r, c, wf,
-        make_all_nodes_list(l2id),
-        parameters["walk_length"],
-        parameters["p"], parameters["q"],
-        thr, parameters["walks_per_node"]
-    )
-    return walks, id2l
-
-def word2vec_emb(walks, id2lbl, thr):
-    from gensim.models import Word2Vec
-    model = Word2Vec(
-        [[str(n) for n in w] for w in walks],
-        vector_size=EMBED_DIM, window=parameters["window"],
-        min_count=0, sg=1, workers=thr, epochs=parameters["epochs"]
-    )
-    z = np.zeros(EMBED_DIM, np.float32)
-    return {lbl: (model.wv[str(i)] if str(i) in model.wv else z)
-            for i,lbl in id2lbl.items()}
-
 def clean(df):
     for c in ("source","target"):
         df[c] = df[c].str.split(".").str[0]
@@ -79,10 +56,35 @@ def undirected(df):
     und = df.groupby(["u","v"],as_index=False)["weight"].max()
     wmax = df["weight"].max()
     nodes = pd.unique(df[["source","target"]].values.ravel())
-    sl = pd.DataFrame({"u":nodes,"v":nodes,"weight":wmax})
+    self_loops = pd.DataFrame({"u":nodes,"v":nodes,"weight":wmax})
     rev = und.rename(columns={"u":"v","v":"u"})
-    return (pd.concat([und,rev,sl],ignore_index=True)
+    return (pd.concat([und,rev,self_loops],ignore_index=True)
               .rename(columns={"u":"source","v":"target"}))
+
+# ======================================================================
+# 1.  Node2Vec embedding builders (unchanged)
+# ======================================================================
+def run_walk(df: pd.DataFrame, thr: int):
+    r,c,wf,l2id,id2l = prepare_edges_for_cpp(df["source"], df["target"], df["weight"])
+    walks = run_biased_random_walk(
+        r, c, wf,
+        make_all_nodes_list(l2id),
+        parameters["walk_length"],
+        parameters["p"], parameters["q"],
+        thr, parameters["walks_per_node"]
+    )
+    return walks, id2l
+
+def word2vec_emb(walks,id2lbl,thr):
+    from gensim.models import Word2Vec
+    model = Word2Vec(
+        [[str(n) for n in w] for w in walks],
+        vector_size=EMBED_DIM, window=parameters["window"],
+        min_count=0, sg=1, workers=thr, epochs=parameters["epochs"]
+    )
+    z = np.zeros(EMBED_DIM, np.float32)
+    return {lbl: (model.wv[str(i)] if str(i) in model.wv else z)
+            for i,lbl in id2lbl.items()}
 
 def fuse(a:Dict[str,np.ndarray], h:Dict[str,np.ndarray]):
     z = np.zeros(EMBED_DIM)
@@ -93,7 +95,7 @@ def build_embeddings(ani,hyp,thr=8):
     return fuse(word2vec_emb(w_a,id2a,thr), word2vec_emb(w_h,id2h,thr))
 
 # ======================================================================
-# 2.  bounds helper
+# 2.  bounds helper (unchanged)
 # ======================================================================
 def bounds_df(meta,scores):
     df = build_relationship_edges(meta,scores)
@@ -102,7 +104,7 @@ def bounds_df(meta,scores):
               [["source","target","lower","upper"]])
 
 # ======================================================================
-# 3.  pair sampler
+# 3.  pair sampler (unchanged)
 # ======================================================================
 def sample_pairs(split:List[str], rel:pd.DataFrame, per:int, K:int, rng):
     nodes=set(split)
@@ -126,40 +128,31 @@ def sample_pairs(split:List[str], rel:pd.DataFrame, per:int, K:int, rng):
     return [(a,b,lut.get((a,b),(NR_CODE,NR_CODE))) for a,b in pairs]
 
 # ======================================================================
-# 4.  dataset
+# 4.  dataset  (embeddings only)
 # ======================================================================
 class PairDS(Dataset):
-    def __init__(self,pairs,emb,ani,hyp):
+    def __init__(self,pairs,emb):
         self.p=np.asarray(pairs,object); self.e=emb
-        def tbl(df):
-            d={}
-            for a,b,w in df[["source","target","weight"]].itertuples(False):
-                d[(a,b)]=w; d[(b,a)]=w
-            return d
-        self.ani=tbl(ani); self.hyp=tbl(hyp)
     def __len__(self): return len(self.p)
     def __getitem__(self,i):
         q,r,(lo,up)=self.p[i]
-        eq=torch.tensor(self.e[q],dtype=torch.float32)
-        er=torch.tensor(self.e[r],dtype=torch.float32)
-        edge=torch.tensor([self.ani.get((q,r),0.0),
-                           self.hyp.get((q,r),0.0)],dtype=torch.float32)
-        return {"eq":eq,"er":er,"edge":edge,
+        return {"eq":torch.tensor(self.e[q],dtype=torch.float32),
+                "er":torch.tensor(self.e[r],dtype=torch.float32),
                 "bounds":torch.tensor([lo,up],dtype=torch.long)}
 
 # ======================================================================
-# 5.  model + losses
+# 5.  model + losses  (no edge scalars)
 # ======================================================================
 class PairNet(nn.Module):
     def __init__(self,dim,k):
         super().__init__()
         self.net=nn.Sequential(
-            nn.Linear(dim*3+2,128), nn.ReLU(),
+            nn.Linear(dim*3,128), nn.ReLU(),
             nn.Linear(128,64), nn.ReLU(),
             nn.Linear(64,k)
         )
     def forward(self,b):
-        x=torch.cat([b["eq"],b["er"],b["eq"]-b["er"],b["edge"]],-1)
+        x=torch.cat([b["eq"], b["er"], b["eq"]-b["er"]], -1)
         return self.net(x)
 
 def interval_ce(logits,bounds):
@@ -174,9 +167,9 @@ def interval_hit(logits,bounds):
         m[i,lo:up+1]=1.
     return (p*m).sum(1).mean().item()
 
-# ======================================================================
-# 5b.  hierarchical-metric helper (unchanged logic)
-# ======================================================================
+# ------------------------------------------------------------------ #
+# hierarchical-metric helper (unchanged logic)
+# ------------------------------------------------------------------ #
 def compute_eval_cm_metrics(cm, labels, run_corr=True):
     from scipy.stats import spearmanr, kendalltau
     arr = np.array(cm,int); K=len(labels)
@@ -204,7 +197,7 @@ def compute_eval_cm_metrics(cm, labels, run_corr=True):
     return metrics
 
 # ======================================================================
-# 6.  epoch runner
+# 6.  epoch runner (unchanged)
 # ======================================================================
 def run_epoch(model,loader,opt=None,collect_cm=False):
     totL=totH=totA=n=n_point=0.
@@ -259,7 +252,7 @@ def train_db(args,db):
            for k in split}
     for k in pairs: log.info("%s pairs = %d",k,len(pairs[k]))
 
-    ds={k:PairDS(pairs[k],emb,ani,hyp) for k in pairs}
+    ds={k:PairDS(pairs[k],emb) for k in pairs}
     ld={k:DataLoader(ds[k],BATCH_SIZE,shuffle=(k=="train"),
                      num_workers=4,pin_memory=True) for k in ds}
 
@@ -278,7 +271,7 @@ def train_db(args,db):
 
     levels=list(score_config[db])
 
-    # ---------- detailed per-split report --------------------------------
+    # detailed per-split report
     for split,(L,H,A,CM) in res.items():
         print(f"\n{split.upper()}  loss={L:.3f}  hit={H:.3f}  acc={A:.3f}")
         if CM is None:
@@ -296,7 +289,7 @@ def train_db(args,db):
             print(f"  Spearman ρ = {extra['spearman_rho']:.3f}, "
                   f"Kendall τ = {extra['kendall_tau']:.3f}")
 
-    # ---------- single-line summary -------------------------------------
+    # one-liner summary
     print(f"\n{db}  hit={res['train'][1]:.3f}/{res['val'][1]:.3f}/"
           f"{res['test'][1]:.3f}  "
           f"acc={res['train'][2]:.3f}/{res['val'][2]:.3f}/"
