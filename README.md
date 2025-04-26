@@ -20,7 +20,7 @@ A tool to classify Viruses (or at the moment, only Caudoviricetes)
 
 
 ### Usage
-Currently, only performance can be tested. I have not yet set up an easy method to classify viruses
+Currently, only performance can be tested. I have not yet set up an easy method to classify viruses outside of the databases
 1. Get help:
 	`ViruLink -h`
 2. Download all databases:
