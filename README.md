@@ -4,13 +4,14 @@ A tool to classify Viruses (or at the moment, only Caudoviricetes)
 #### Download/Installation
 1. Clone this repository:
 	`git clone https://github.com/Ellouzlab/ViruLink.git`
-2. Create a conda env with python>=3.10, Diamond (later than version 2), MMseqs2 (later than version 14) and skani (0.2.2) : 
+2. Create a conda env with python>=3.10, Diamond (later than version 2), MMseqs2 (later than version 14) and skani (0.2.2):
+
 	`mamba create -n ViruLink -c conda-forge -c bioconda "python>=3.10" "diamond>=2" "mmseqs2>=14" "skani=0.2.2"`
-3. Activate environment:
+4. Activate environment:
 	`mamba activate ViruLink`
-4. change directories into ViruLink:
+5. change directories into ViruLink:
 	`cd ViruLink`
-5. Install program via pip:
+6. Install program via pip:
 	`python -m pip install -e .`
 
 
