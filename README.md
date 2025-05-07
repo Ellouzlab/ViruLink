@@ -36,6 +36,8 @@ A tool to classify Viruses (or at the moment, only Caudoviricetes)
 
    	`ViruLink classify --query 'PATH_TO_YOUR_QUERY' --database 'OPTION_FROM_AMONG_DATABASES' --output 'PATH_TO_OUT_CSV'`
 
+For queries, each viral genome should be represented with a single contig, with all ids being unique.
+
 NOTE: If you have a viral genome with multiple contigs, you can concatenate them end-to-end all the contigs and use ViruLink - it won't make a difference in the results. Here is an example:
 
 	>virus_contig_1
