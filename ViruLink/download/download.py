@@ -68,6 +68,7 @@ def ClassDownloadProcessor(class_outpath, ictv_path):
     seq_dict = {seq.id.split('.')[0]: seq for seq in seq_list}
     seq_df = pd.read_csv(initial_csv[0])
     
+    
     if "Assembly" not in seq_df.columns or "Accession" not in seq_df.columns:
         logging.error(f"CSV at {initial_csv[0]} missing required columns 'Assembly' or 'Accession'.")
         sys.exit(1)
@@ -76,9 +77,14 @@ def ClassDownloadProcessor(class_outpath, ictv_path):
     for assembly, group in seq_df.groupby("Assembly"):
         representative_row = group.iloc[0]
         representative_accession = representative_row["Accession"]
-        representative_seq = seq_dict[representative_accession]
+        representative_accession = representative_row["Accession"].split('.')[0]  # <─ NEW
+        representative_seq = seq_dict[representative_accession] 
         
-        concatenated_sequence = ''.join([str(seq_dict[accession].seq) for accession in group["Accession"] if accession in seq_dict])
+        concatenated_sequence = ''.join([
+            str(seq_dict[a.split('.')[0]].seq)   # <─ NEW
+            for a in group["Accession"]
+            if a.split('.')[0] in seq_dict       # <─ keeps you safe if anything is still missing
+        ])
         representative_seq.seq = Seq(concatenated_sequence)
         
         representative_records.append(representative_seq)

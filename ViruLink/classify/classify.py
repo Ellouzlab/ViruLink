@@ -11,16 +11,14 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import confusion_matrix
+from typing import Dict, List, Tuple
+from torch.utils.data import DataLoader, Dataset
 
 # ViruLink imports
 from ViruLink.train.OrdTri import OrdTri
 from ViruLink.train.losses import CUM_TRE_LOSS, _adjacent_probs
 from ViruLink.sampler.triangle_sampler import sample_triangles
-from ViruLink.test.test_triangle import (
-    TriDS,                       # dataset helper
-    run_epoch,                   # one-epoch training/validation loop
-    interval_hit_rate            # (only used inside run_epoch)
-)
+from ViruLink.test.test_triangle import run_epoch
 from ViruLink.setup.databases import database_info
 from ViruLink.setup.run_parameters import parameters
 from ViruLink.setup.score_profile import score_config
@@ -36,20 +34,65 @@ from ViruLink.utils import (
     edge_list_to_presence_absence,
     compute_hypergeom_weights,
     create_graph)
-from ViruLink.test.test_triangle import (
-    process_graph,
-    remove_version,
-    fuse_emb,
-    build_rel_bounds)
 from ViruLink.train.n2v import n2v
+from ViruLink.relations.relationship_edges import build_relationship_edges
 
 
+
+class TriDS(Dataset):
+    def __init__(
+        self,
+        tris: List[Tuple],
+        emb: Dict[str, np.ndarray],
+        ani_df: pd.DataFrame,
+        hyp_df: pd.DataFrame
+    ):
+        self.t = tris
+        self.e = emb
+
+        def lut(df):
+            d = {}
+            for s, t, w in df[["source", "target", "weight"]].itertuples(False):
+                d[(s, t)] = w
+                d[(t, s)] = w
+            return d
+        self.ani = lut(ani_df)
+        self.hyp = lut(hyp_df)
+
+    def _w(self, a, b, table):
+        return torch.tensor([table.get((a, b), 0.0)], dtype=torch.float32)
+
+    def __len__(self): return len(self.t)
+
+    def __getitem__(self, i):
+        q, r1, r2, b1, b2, b3 = self.t[i]
+        eq = torch.tensor(self.e[q],  dtype=torch.float32)
+        ea = torch.tensor(self.e[r1], dtype=torch.float32)
+        eh = torch.tensor(self.e[r2], dtype=torch.float32)
+
+        edge = torch.cat([
+            self._w(q,  r1, self.ani), self._w(q,  r1, self.hyp),
+            self._w(q,  r2, self.ani), self._w(q,  r2, self.hyp),
+            self._w(r1, r2, self.ani), self._w(r1, r2, self.hyp)
+        ])                       # shape [6]
+
+        return {
+            "eq": eq, "ea": ea, "eh": eh, "edge": edge,
+            "lqa": torch.tensor(b1, dtype=torch.long),
+            "lqh": torch.tensor(b2, dtype=torch.long),
+            "lrr": torch.tensor(b3, dtype=torch.long),
+        }
 
 
 
 
 
 # ────────────────────────── helpers ──────────────────────────
+def remove_version(df: pd.DataFrame):
+    for col in ("source", "target"):
+        df[col] = df[col].str.split(".").str[0]
+    return df
+
 def delete_tmp(tmp_path: str):
     """Remove temporary directory (ignore if already gone)."""
     if tmp_path and os.path.isdir(tmp_path):
@@ -116,6 +159,30 @@ def remove_version(df: pd.DataFrame):
     return df
 
 # ──────────────────────── graph building ────────────────────────
+def fuse_emb(ani_emb: Dict[str, np.ndarray],
+             hyp_emb: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+    fused = {}
+    EMBED_DIM = parameters["embedding_dim"]
+    for n in set(ani_emb) | set(hyp_emb):
+        v1 = ani_emb.get(n, np.zeros(EMBED_DIM))
+        v2 = hyp_emb.get(n, np.zeros(EMBED_DIM))
+        fused[n] = np.concatenate([v1, v2])
+    return fused
+
+def process_graph(df: pd.DataFrame):
+    df = df[df["source"] != df["target"]].copy()
+    u = np.minimum(df["source"], df["target"])
+    v = np.maximum(df["source"], df["target"])
+    df[["u", "v"]] = np.column_stack([u, v])
+    und   = df.groupby(["u", "v"], as_index=False)["weight"].max()
+    max_w = df["weight"].max()
+    nodes = pd.unique(df[["source", "target"]].values.ravel())
+    self_loops = pd.DataFrame({"u": nodes, "v": nodes, "weight": max_w})
+    rev = und.rename(columns={"u": "v", "v": "u"})
+    return (pd.concat([und, rev, self_loops], ignore_index=True)
+              .rename(columns={"u": "source", "v": "target"}))
+
+
 def generate_database(class_data, unproc_path):
     db_outpath = f"{unproc_path}/{class_data}"
     DiamondCreateDB(get_file_path(unproc_path,"faa"), db_outpath, force=False)
@@ -156,6 +223,16 @@ def m8_processor(m8_file, class_data, eval_threshold, bitscore_threshold):
     presence_absence_matrix.columns.name = None
     presence_absence_matrix.index.name = None
     return presence_absence_matrix
+
+def build_rel_bounds(meta_df: pd.DataFrame,
+                     rel_scores: Dict[str, int]) -> pd.DataFrame:
+    df = build_relationship_edges(meta_df, rel_scores)
+    return (df.rename(columns={"rank_low": "lower", "rank_up": "upper"})
+              .astype({"lower": "uint8", "upper": "uint8"})
+              [["source", "target", "lower", "upper"]])
+    
+    
+
 
 # ────────────────────────── main entry ──────────────────────────
 def ClassifyHandler(arguments, classes_df):
@@ -275,29 +352,24 @@ def ClassifyHandler(arguments, classes_df):
     
     
     
-    
-    
-    
-    
-    
-    
-    
     # ───────────────────── train OrdTri on 90 / 10 split ─────────────────────
     # hyper-parameters copied verbatim from test_triangle.py
     RNG_SEED      = 42
-    EPOCHS        = 20
+    EPOCHS        = 10
     BATCH_SIZE    = 512
     LR            = 1e-3
     NUM_PER_CLASS = 4000
     LAMBDA_INT    = 1.0
-    LAMBDA_TRI    = 0.0
+    LAMBDA_TRI    = 0.1
     EDGE_ORDER    = ("r1r2", "qr2", "qr1")   # same prediction schedule
-    EDGE_PRED_CNT = 3
+    EDGE_PRED_CNT = 4
 
     EMBED_DIM = parameters["embedding_dim"]
     COMB_DIM  = EMBED_DIM * 2                # ANI ⨁ HYP embeddings
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() and not arguments.cpu else "cpu")
+    logging.info("Using device: %s", device)
+    logging.info("Using %d threads", arguments.threads)
     torch.manual_seed(RNG_SEED)
     np.random.seed(RNG_SEED)
     random.seed(RNG_SEED)
@@ -306,6 +378,7 @@ def ClassifyHandler(arguments, classes_df):
     LEVEL2RANK = {lvl: r for r, lvl in enumerate(score_config[class_data])}
     K_CLASSES  = max(LEVEL2RANK.values()) + 1
     RANK2LEVEL = {r: lvl for lvl, r in LEVEL2RANK.items()}
+    NR_CODE    = LEVEL2RANK["NR"]
 
     # split DB nodes (queries are excluded)
     all_nodes = list(nodes_in_graphs)
@@ -344,62 +417,68 @@ def ClassifyHandler(arguments, classes_df):
 
     logging_header("Training OrdTri edge predictor")
     for ep in range(1, EPOCHS + 1):
-        trL, trH, trA, _ = run_epoch(model, ld_train, opt)
-        vaL, vaH, vaA, _ = run_epoch(model, ld_val)
+        trL, trH, trA, _ = run_epoch(
+            model, ld_train,
+            K_CLASSES,           # total number of rank levels
+            NR_CODE,             # index of the “NR” level
+            opt,
+            cpu_flag=arguments.cpu)
+        vaL, vaH, vaA, _ = run_epoch(model, ld_val, K_CLASSES, NR_CODE, cpu_flag=arguments.cpu)
         logging.info(
             "Ep%02d  train L=%.3f hit=%.3f acc=%.3f   val L=%.3f hit=%.3f acc=%.3f",
             ep, trL, trH, trA, vaL, vaH, vaA
         )
 
     # ─────────── confusion matrix for point-label edges (val) ───────────
-    _, _, _, val_cm = run_epoch(model, ld_val, collect_cm=True)
+    _, _, _, val_cm = run_epoch(model, ld_val, K_CLASSES, NR_CODE,
+                            collect_cm=True, cpu_flag=arguments.cpu)
     if val_cm is not None:
         levels = list(score_config[class_data])
         logging_header("VALIDATION CONFUSION MATRIX  (point-label edges only)")
         print(pd.DataFrame(val_cm, index=levels, columns=levels).to_string())
     # ─────────────────────────────────────────────────────────────────────
     
-    # ───────────────────── inference for each query ─────────────────────
-    def _closest(weight_table, q, banned):
+    # ─────────── helpers for reconciliation ───────────
+    UNKNOWN_TOKENS = {"", "nan", "na", "unknown"}
+
+    def _is_unknown(val) -> bool:
+        """True if *val* is missing or any flavour of ‘unknown’."""
+        if pd.isna(val):
+            return True
+        return str(val).strip().lower() in UNKNOWN_TOKENS
+
+    def _first_known(*vals):
+        """Return the first non-unknown value (or '' if none)."""
+        for v in vals:
+            if not _is_unknown(v):
+                return v
+        return ""
+
+    def _reconcile_taxa(row1: pd.Series,
+                        row2: pd.Series,
+                        starting_rank: int) -> int:
         """
-        Fast arg-max neighbour search that completely ignores self-loops.
+        Walk *up* the taxonomy until the two neighbours agree (ignoring unknowns).
 
         Parameters
         ----------
-        weight_table : dict
-            {(src, dst): weight, …} for either ANI or HYP graph.
-        q : str
-            Version-stripped query accession.
-        banned : set[str]
-            Nodes that are **not** allowed to be returned (other queries, etc.).
+        row1, row2 : taxonomy rows for the two reference viruses
+        starting_rank : numeric rank picked by OrdTri (e.g. species = 4)
 
         Returns
         -------
-        str | None
-            The neighbour with the highest weight, or None if none exist.
+        int
+            The reconciled rank (may be == starting_rank if no conflict).
         """
-        best_node, best_w = None, -1.0
+        # ranks are ordered broad → specific in score_config
+        levels = list(score_config[class_data])          # e.g. ["family","genus","species"]
+        for r in range(starting_rank, -1, -1):           # walk species → genus → …
+            lvl = levels[r]
+            v1, v2 = row1.get(lvl, ""), row2.get(lvl, "")
+            if _is_unknown(v1) or _is_unknown(v2) or v1 == v2:
+                return r                                 # match (or unknown) ⇒ stop here
+        return 0                                         # fall back to top level
 
-        # 1) forward edges   q → *
-        for (_, dst), w in weight_table.items():
-            if _ != q:          # skip keys whose src ≠ q
-                continue
-            if dst == q or dst in banned:
-                continue
-            if w > best_w:
-                best_node, best_w = dst, w
-
-        # 2) reverse edges   * → q
-        for (src, _), w in weight_table.items():
-            if _ != q:          # key’s dst ≠ q
-                continue
-            if src == q or src in banned:
-                continue
-            if w > best_w:
-                best_node, best_w = src, w
-
-        return best_node
-    # ────────────────────────────────────────────────────────────────────
 
 
 
@@ -511,10 +590,44 @@ def ClassifyHandler(arguments, classes_df):
               
         rank1, prob1, rank2, prob2 = _predict(q, r1, r2)
 
+        # ------------------------------------------------------------------
+        # new logic that reconciles the two candidate edges
+        # ------------------------------------------------------------------
+        row1 = meta.loc[meta["Accession"] == r1].squeeze()
+        row2 = meta.loc[meta["Accession"] == r2].squeeze()
+
+        # pick the edge OrdTri judged stronger (tie-break by prob)
         if rank1 >= rank2:
             picked_node, picked_rank, picked_prob = r1, rank1, prob1
         else:
             picked_node, picked_rank, picked_prob = r2, rank2, prob2
+
+        # ------------------------------------------------------------------
+        # logical reconciliation – no probability tie-breaks
+        # ------------------------------------------------------------------
+        row1, row2 = (
+            meta.loc[meta["Accession"] == r1].squeeze(),
+            meta.loc[meta["Accession"] == r2].squeeze(),
+        )
+
+        # default to r1 unless its taxon is unknown at the final rank
+        initial_pick = r1
+        initial_rank = rank1
+        initial_prob = prob1
+
+        # compute the reconciled (possibly broader) rank
+        resolved_rank = _reconcile_taxa(row1, row2, min(rank1, rank2))
+
+        # if initial pick is unknown at the resolved rank, switch to r2
+        lvl_name = list(score_config[class_data])[resolved_rank]
+        if _is_unknown(row1.get(lvl_name, "")):
+            initial_pick, initial_rank, initial_prob = r2, rank2, prob2
+
+        picked_node  = initial_pick
+        picked_rank  = resolved_rank
+        picked_prob  = initial_prob if resolved_rank == initial_rank else "LOGIC"
+        # ------------------------------------------------------------------
+
 
         # taxonomy columns up to the predicted level
         tax_row = meta.loc[meta["Accession"] == picked_node].squeeze() \
@@ -538,5 +651,5 @@ def ClassifyHandler(arguments, classes_df):
     classif_df = classif_df.drop("NR", axis=1)
     logging_header("Classification results")
     print(classif_df.to_string(index=False))
-    return classif_df
+    classif_df.to_csv(arguments.output, index=False)
         

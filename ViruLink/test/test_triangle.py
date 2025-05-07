@@ -1,23 +1,29 @@
 #!/usr/bin/env python3
-# Ordinal-relationship prediction with interval-censored losses
-# Triangle sampler + Node2Vec embeddings + raw ANI/HYP edge features
+"""
+Ordinal-relationship prediction with interval-censored losses
+Triangle sampler + Node2Vec embeddings + raw ANI/HYP edge features.
+This version fixes all hard-coded rank constants so that it works for **any**
+virus class in `score_profile`.  The per-database parameters (`K_CLASSES`,
+`NR_CODE`, …) are recomputed inside `DatabaseTesting`, and the global symbols
+that the helper functions expect are patched at runtime.
+"""
+from __future__ import annotations
+
 import logging
 import random
 from pathlib import Path
 from typing import Dict, List, Tuple
-from collections import defaultdict
+
 import numpy as np
 import pandas as pd
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from sklearn.metrics import confusion_matrix
 from torch.utils.data import DataLoader, Dataset
 
-# ViruLink utilities
-from ViruLink.setup.score_profile  import score_config
+# ────────────────────── ViruLink imports ──────────────────────
+from ViruLink.setup.score_profile import score_config
 from ViruLink.setup.run_parameters import parameters
-from ViruLink.setup.databases      import database_info
+from ViruLink.setup.databases import database_info
 from ViruLink.relations.relationship_edges import build_relationship_edges
 from ViruLink.train.OrdTri import OrdTri
 from ViruLink.train.n2v import n2v
@@ -25,63 +31,56 @@ from ViruLink.train.losses import CUM_TRE_LOSS, _adjacent_probs
 from ViruLink.sampler.triangle_sampler import sample_triangles
 from ViruLink.utils import logging_header
 
+# ────────────────────── static hyper-parameters ──────────────────────
+RNG_SEED = 42
+EPOCHS = 10
+BATCH_SIZE = 512
+LR = 1e-3
+NUM_PER_CLASS = 4_000  # triangles per (rank × upper|lower)
+LAMBDA_INT = 1.0
+LAMBDA_TRI = 0.0
+EDGE_ORDER = ("r1r2", "qr2", "qr1")   # prediction sequence
+EDGE_PRED_COUNT = 4
 
+EMBED_DIM = parameters["embedding_dim"]
+COMB_DIM = EMBED_DIM * 2          # after fusing ANI+HYP embeddings
 
-# ─────────────────────Hyperparameters───────────────────────────────
-RNG_SEED      = 42
-EPOCHS        = 20
-BATCH_SIZE    = 512
-LR            = 1e-3
-
-NUM_PER_CLASS = 4000          # triangles per (rank × upper|lower)
-LAMBDA_INT    = 1.0
-LAMBDA_TRI    = 0.0 # ideal case 0.0. Improvement @ 0.1 but only with higher edge pred count (4)
-
-EMBED_DIM     = parameters["embedding_dim"]
-COMB_DIM      = EMBED_DIM * 2        # after fusing ANI+HYP embeddings
 EVALUATION_METRICS_ENABLED = True
 
-# rank helpers
-LEVEL2RANK = {lvl: r for r, lvl in enumerate(score_config["Caudoviricetes"])}
-K_CLASSES  = max(LEVEL2RANK.values()) + 1
-NR_CODE    = LEVEL2RANK["NR"]               # least specific rank
-RANK2LEVEL = {r: lvl for lvl, r in LEVEL2RANK.items()}
-EDGE_ORDER        = ("r1r2", "qr2", "qr1")   # prediction sequence
-EDGE_PRED_COUNT   = 4
-
-# device & RNG 
+# Device & RNG ————————————————————————————————————————————————
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.manual_seed(RNG_SEED)
 random.seed(RNG_SEED)
 np.random.seed(RNG_SEED)
 
+# ────────────────────── utility helpers ──────────────────────
 
-# ──────────────────────────BEGIN!!───────────────────────────────
-
-
-def remove_version(df: pd.DataFrame):
+def remove_version(df: pd.DataFrame) -> pd.DataFrame:
     for col in ("source", "target"):
         df[col] = df[col].str.split(".").str[0]
     return df
 
 
-def process_graph(df: pd.DataFrame):
+def process_graph(df: pd.DataFrame) -> pd.DataFrame:
+    """Return an undirected, self-loop-completed graph."""
     df = df[df["source"] != df["target"]].copy()
     u = np.minimum(df["source"], df["target"])
     v = np.maximum(df["source"], df["target"])
     df[["u", "v"]] = np.column_stack([u, v])
-    und   = df.groupby(["u", "v"], as_index=False)["weight"].max()
+    und = df.groupby(["u", "v"], as_index=False)["weight"].max()
     max_w = df["weight"].max()
     nodes = pd.unique(df[["source", "target"]].values.ravel())
     self_loops = pd.DataFrame({"u": nodes, "v": nodes, "weight": max_w})
     rev = und.rename(columns={"u": "v", "v": "u"})
-    return (pd.concat([und, rev, self_loops], ignore_index=True)
-              .rename(columns={"u": "source", "v": "target"}))
+    return (
+        pd.concat([und, rev, self_loops], ignore_index=True)
+        .rename(columns={"u": "source", "v": "target"})
+    )
 
 
 def fuse_emb(ani_emb: Dict[str, np.ndarray],
              hyp_emb: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
-    fused = {}
+    fused: Dict[str, np.ndarray] = {}
     for n in set(ani_emb) | set(hyp_emb):
         v1 = ani_emb.get(n, np.zeros(EMBED_DIM))
         v2 = hyp_emb.get(n, np.zeros(EMBED_DIM))
@@ -89,35 +88,26 @@ def fuse_emb(ani_emb: Dict[str, np.ndarray],
     return fused
 
 
-# taxonomy helper
-def build_rel_bounds(meta_df: pd.DataFrame,
-                     rel_scores: Dict[str, int]) -> pd.DataFrame:
+def build_rel_bounds(meta_df: pd.DataFrame, rel_scores: Dict[str, int]) -> pd.DataFrame:
     df = build_relationship_edges(meta_df, rel_scores)
-    return (df.rename(columns={"rank_low": "lower", "rank_up": "upper"})
-              .astype({"lower": "uint8", "upper": "uint8"})
-              [["source", "target", "lower", "upper"]])
+    return (
+        df.rename(columns={"rank_low": "lower", "rank_up": "upper"})
+        .astype({"lower": "uint8", "upper": "uint8"})
+        [["source", "target", "lower", "upper"]]
+    )
 
-# triangle sampler
+
+# ────────────────────── triangle sampler wrapper ──────────────────────
+
 def sample_intra_split_triangles(
     nodes: List[str],
     rel_df: pd.DataFrame,
     num_per_class: int,
     k_classes: int,
     threads: int,
-    seed: int = RNG_SEED
+    seed: int = RNG_SEED,
 ) -> List[Tuple]:
-    """
-    Fast C++ implementation (pybind11/OpenMP).
-
-    Parameters
-    ----------
-    nodes          : list of node IDs that belong to *this* split
-    rel_df         : dataframe with columns [source, target, lower, upper]
-    num_per_class  : triangles per (rank × upper|lower)
-    k_classes      : number of rank levels
-    threads        : #threads for OpenMP (0 => default)
-    seed           : RNG seed passed to C++ sampler
-    """
+    """Call the C++/OpenMP triangle sampler."""
     return sample_triangles(
         nodes,
         rel_df["source"].tolist(),
@@ -131,274 +121,258 @@ def sample_intra_split_triangles(
     )
 
 
-# dataset + model
+# ────────────────────── PyTorch dataset ──────────────────────
 class TriDS(Dataset):
     def __init__(
         self,
         tris: List[Tuple],
         emb: Dict[str, np.ndarray],
         ani_df: pd.DataFrame,
-        hyp_df: pd.DataFrame
-    ):
+        hyp_df: pd.DataFrame,
+    ) -> None:
         self.t = tris
         self.e = emb
 
-        def lut(df):
-            d = {}
+        def lut(df: pd.DataFrame):
+            d: Dict[Tuple[str, str], float] = {}
             for s, t, w in df[["source", "target", "weight"]].itertuples(False):
-                d[(s, t)] = w
-                d[(t, s)] = w
+                d[(s, t)] = w; d[(t, s)] = w
             return d
+
         self.ani = lut(ani_df)
         self.hyp = lut(hyp_df)
 
-    def _w(self, a, b, table):
+    def _w(self, a: str, b: str, table: Dict[Tuple[str, str], float]):
         return torch.tensor([table.get((a, b), 0.0)], dtype=torch.float32)
 
-    def __len__(self): return len(self.t)
+    def __len__(self):
+        return len(self.t)
 
     def __getitem__(self, i):
         q, r1, r2, b1, b2, b3 = self.t[i]
-        eq = torch.tensor(self.e[q],  dtype=torch.float32)
+        eq = torch.tensor(self.e[q], dtype=torch.float32)
         ea = torch.tensor(self.e[r1], dtype=torch.float32)
         eh = torch.tensor(self.e[r2], dtype=torch.float32)
 
-        edge = torch.cat([
-            self._w(q,  r1, self.ani), self._w(q,  r1, self.hyp),
-            self._w(q,  r2, self.ani), self._w(q,  r2, self.hyp),
-            self._w(r1, r2, self.ani), self._w(r1, r2, self.hyp)
-        ])                       # shape [6]
+        edge = torch.cat(
+            [
+                self._w(q, r1, self.ani), self._w(q, r1, self.hyp),
+                self._w(q, r2, self.ani), self._w(q, r2, self.hyp),
+                self._w(r1, r2, self.ani), self._w(r1, r2, self.hyp),
+            ]
+        )  # → [6]
 
         return {
-            "eq": eq, "ea": ea, "eh": eh, "edge": edge,
+            "eq": eq,
+            "ea": ea,
+            "eh": eh,
+            "edge": edge,
             "lqa": torch.tensor(b1, dtype=torch.long),
             "lqh": torch.tensor(b2, dtype=torch.long),
             "lrr": torch.tensor(b3, dtype=torch.long),
         }
 
 
-# losses + metrics
-def interval_hit_rate(logits, bounds):
-    """
-    Percentage of samples whose **predicted rank** lies inside
-    the ground-truth interval [lower, upper] (inclusive).
-    """
+# ────────────────────── training/validation helpers ──────────────────────
+
+def interval_hit_rate(logits: torch.Tensor, bounds: torch.Tensor) -> float:
     pred = torch.argmax(_adjacent_probs(logits), dim=1)
-    lo   = bounds[:, 0]
-    up   = bounds[:, 1]
-    hits = (pred >= lo) & (pred <= up)                    # bool mask
-    return hits.float().mean().item()
+    lo, up = bounds[:, 0], bounds[:, 1]
+    return ((pred >= lo) & (pred <= up)).float().mean().item()
 
-def run_epoch(model, loader, opt=None, collect_cm=False):
-    """
-    One training / validation epoch.
 
-    Workflow
-    --------
-    1. Start with uniform rank-probability vectors for qr1, qr2, r1r2.
-    2. For EDGE_PRED_COUNT cycles:
-         - predict edges in EDGE_ORDER
-         - update that edge’s probability vector with its predicted distribution.
-    3. Compute the loss from the final logits of all three edges.
-    4. Metrics:
-         – hit-rate (all samples, edge qr1)
-         – accuracy on point labelled qr1 edges only (upper == lower)
-    """
-    totL = totH = 0.0            # epoch totals for loss, hit
-    totA = 0.0                   # aggregated accuracy *only for point edges*
-    n    = 0                     # total number of samples
-    n_pt = 0                     # total number of point-label samples
+def run_epoch(
+    model: OrdTri,
+    loader: DataLoader,
+    k_classes: int,
+    nr_code: int,
+    opt: torch.optim.Optimizer | None = None,
+    collect_cm: bool = False,
+    cpu_flag: bool = False,
+):
+    device_local = torch.device("cuda" if torch.cuda.is_available() and not cpu_flag else "cpu")
+    totL = totH = 0.0
+    totA = 0.0; n_pt = 0; n = 0
 
-    tbuf, pbuf = [], []          # confusion-matrix buffers
+    tbuf, pbuf = [], []
     model.train(opt is not None)
 
     for batch in loader:
-        # send everything to device
         for k in batch:
-            batch[k] = batch[k].to(device)
+            batch[k] = batch[k].to(device_local)
+        B = batch["eq"].size(0)
 
-        B = batch["eq"].size(0)          # mini-batch size
-
-        # 1.  initialise uniform priors for the three edges
-        uniform = torch.full((B, K_CLASSES), 1.0 / K_CLASSES, device=device)
-        cur_p = {"qr1": uniform.clone(),
-                 "qr2": uniform.clone(),
-                 "r1r2": uniform.clone()}
-
+        uniform = torch.full((B, k_classes), 1.0 / k_classes, device=device_local)
+        cur_p = {"qr1": uniform.clone(), "qr2": uniform.clone(), "r1r2": uniform.clone()}
         last_logits = {}
 
-        # 2.  sequential prediction cycles 
         for _ in range(EDGE_PRED_COUNT):
             for edge_key in EDGE_ORDER:
-                # select node-pair embeddings for this edge
                 if edge_key == "qr1":
                     xa, xb = batch["eq"], batch["ea"]
                 elif edge_key == "qr2":
                     xa, xb = batch["eq"], batch["eh"]
-                else:                       # "r1r2"
+                else:
                     xa, xb = batch["ea"], batch["eh"]
 
-                probs_vec = torch.cat(
-                    [cur_p["qr1"], cur_p["qr2"], cur_p["r1r2"]], dim=1
-                )                                       # [B, 3·K]
-
+                probs_vec = torch.cat([cur_p["qr1"], cur_p["qr2"], cur_p["r1r2"]], dim=1)
                 lg = model(xa, xb, batch["edge"], probs_vec)
                 last_logits[edge_key] = lg
-
-                # update probabilities for this edge
                 cur_p[edge_key] = _adjacent_probs(lg)
 
-        # 3.  compute loss from final logits
-        la = last_logits["qr1"]
-        lh = last_logits["qr2"]
-        lr = last_logits["r1r2"]
-
-        loss = CUM_TRE_LOSS(la, lh, lr, batch,
-                            LAMBDA_INT=LAMBDA_INT,
-                            LAMBDA_TRI=LAMBDA_TRI)
+        la = last_logits["qr1"]; lh = last_logits["qr2"]; lr = last_logits["r1r2"]
+        loss = CUM_TRE_LOSS(la, lh, lr, batch, LAMBDA_INT=LAMBDA_INT, LAMBDA_TRI=LAMBDA_TRI)
 
         if opt:
-            opt.zero_grad()
-            loss.backward()
-            opt.step()
+            opt.zero_grad(); loss.backward(); opt.step()
 
-        # 4.  metrics 
         hit = interval_hit_rate(la, batch["lqa"])
-
-        # point label mask (upper == lower for qr1 edge)
         mask = batch["lqa"][:, 0] == batch["lqa"][:, 1]
         p_cnt = mask.sum().item()
-
         if p_cnt:
             preds = torch.argmax(_adjacent_probs(la[mask]), 1)
-            acc   = (preds == batch["lqa"][mask, 0]).float().mean().item()
-
-            totA += acc * p_cnt           # weighted by point sample count
-            n_pt += p_cnt
-
+            acc = (preds == batch["lqa"][mask, 0]).float().mean().item()
+            totA += acc * p_cnt; n_pt += p_cnt
             if collect_cm:
                 tbuf.extend(batch["lqa"][mask, 0].cpu().tolist())
                 pbuf.extend(preds.cpu().tolist())
 
-        # aggregate totals
-        totL += loss.item() * B
-        totH += hit * B
-        n    += B
+        totL += loss.item() * B; totH += hit * B; n += B
 
-    cm = (confusion_matrix(tbuf, pbuf,
-                           labels=list(range(K_CLASSES)))
-          if tbuf else None)
-
+    cm = (
+        confusion_matrix(tbuf, pbuf, labels=list(range(k_classes))) if tbuf else None
+    )
     meanA = totA / n_pt if n_pt else float("nan")
-
     return totL / n, totH / n, meanA, cm
 
 
-def compute_eval_cm_metrics(cm, labels, run_corr=True):
+def compute_eval_cm_metrics(cm: np.ndarray, labels: List[str], nr_code: int):
     from scipy.stats import spearmanr, kendalltau
-    arr = np.array(cm, int); K=len(labels)
-    metrics={'per_class':{}}
-    for r,lbl in enumerate(labels):
-        if r==NR_CODE:
-            TP=arr[r,r]; P=arr[:,r].sum(); A=arr[r,:].sum()
+
+    arr = np.array(cm, int); K = len(labels)
+    metrics = {"per_class": {}}
+    for r, lbl in enumerate(labels):
+        if r == nr_code:
+            TP = arr[r, r]; P = arr[:, r].sum(); A = arr[r, :].sum()
         else:
-            TP=arr[r:,r:].sum(); P=arr[:,r:].sum(); A=arr[r:,:].sum()
-        prec=TP/P if P else 0.; rec=TP/A if A else 0.
-        f1=2*prec*rec/(prec+rec) if prec+rec else 0.
-        metrics['per_class'][lbl]={'precision':prec,'recall':rec,'f1':f1,'support':int(A)}
-    if run_corr:
-        tr,pred=[],[]
-        for i in range(K):
-            sup=arr[i,:].sum()
-            if not sup: continue
-            tr.append(i)
-            pred.append((arr[i,:]*np.arange(K)).sum()/sup)
-        if len(tr)>1:
-            rho,_=spearmanr(tr,pred); tau,_=kendalltau(tr,pred)
-        else: rho=tau=float('nan')
-        metrics['spearman_rho']=rho; metrics['kendall_tau']=tau
+            TP = arr[r:, r:].sum(); P = arr[:, r:].sum(); A = arr[r:, :].sum()
+        prec = TP / P if P else 0.0; rec = TP / A if A else 0.0
+        f1 = 2 * prec * rec / (prec + rec) if prec + rec else 0.0
+        metrics["per_class"][lbl] = {
+            "precision": prec, "recall": rec, "f1": f1, "support": int(A)
+        }
+    tr, pred = [], []
+    for i in range(K):
+        sup = arr[i, :].sum();
+        if not sup: continue
+        tr.append(i)
+        pred.append((arr[i, :] * np.arange(K)).sum() / sup)
+    if len(tr) > 1:
+        rho, _ = spearmanr(tr, pred); tau, _ = kendalltau(tr, pred)
+    else:
+        rho = tau = float("nan")
+    metrics["spearman_rho"] = rho; metrics["kendall_tau"] = tau
     return metrics
 
+# ────────────────────── main routine for one database ──────────────────────
 
+def DatabaseTesting(args, db: str):
+    # ---------------- per-database rank helpers ----------------
+    lvl2rank = {lvl: r for r, lvl in enumerate(score_config[db])}
+    k_classes = max(lvl2rank.values()) + 1
+    nr_code = lvl2rank["NR"]
 
-# database routine + Cli
-def DatabaseTesting(args, db):
-    p=Path(args.databases_loc)/db
+    # Patch the global symbols **so the helper functions see them**
+    global K_CLASSES, NR_CODE
+    K_CLASSES = k_classes; NR_CODE = nr_code
+
+    p = Path(args.databases_loc) / db
 
     logging_header("Loading %s database", db)
-    ani = process_graph(remove_version(pd.read_csv(p/"self_ANI.tsv", sep="\t")))
-    hyp = process_graph(remove_version(pd.read_csv(p/"hypergeom_edges.csv")))
+    ani = process_graph(remove_version(pd.read_csv(p / "self_ANI.tsv", sep="\t")))
+    hyp = process_graph(remove_version(pd.read_csv(p / "hypergeom_edges.csv")))
     logging.info("ANI Graph: %d edges", len(ani))
     logging.info("HYP Graph: %d edges", len(hyp))
-    
 
     logging_header("Performing node2vec")
-    ani_emb = n2v(ani,args.threads, parameters)
-    hyp_emb = n2v(hyp,args.threads, parameters)
+    ani_emb = n2v(ani, args.threads, parameters)
+    hyp_emb = n2v(hyp, args.threads, parameters)
     emb = fuse_emb(ani_emb, hyp_emb)
     logging.info("Node2vec embeddings generated for %d nodes", len(emb))
 
-    logging_header("Splitting nodes int train/val/test")
-    all_nodes=list(emb); random.shuffle(all_nodes)
-    c1,c2=int(.8*len(all_nodes)), int(.9*len(all_nodes))
-    splits={"train":all_nodes[:c1],"val":all_nodes[c1:c2],"test":all_nodes[c2:]}
-    logging.info("train/val/test sizes: %d/%d/%d", len(splits["train"]),
-                 len(splits["val"]), len(splits["test"]))
+    # Split 80/10/10
+    all_nodes = list(emb); random.shuffle(all_nodes)
+    c1, c2 = int(.8 * len(all_nodes)), int(.9 * len(all_nodes))
+    splits = {"train": all_nodes[:c1], "val": all_nodes[c1:c2], "test": all_nodes[c2:]}
+    logging.info("train/val/test sizes: %d/%d/%d", *(len(splits[k]) for k in ("train", "val", "test")))
 
     logging_header("Loading %s relationships", db)
-    meta=pd.read_csv(p/f"{db}.csv")
+    meta = pd.read_csv(p / f"{db}.csv")
     rel = build_rel_bounds(meta, score_config[db])
-    edges={k:rel[rel["source"].isin(splits[k]) & rel["target"].isin(splits[k])]
-           .reset_index(drop=True) for k in splits}
-    logging.info("Relationship edges: train - %d | val - %d | test - %d", len(edges["train"]),
-                 len(edges["val"]), len(edges["test"]))
+    edges = {k: rel[rel["source"].isin(splits[k]) & rel["target"].isin(splits[k])].reset_index(drop=True)
+             for k in splits}
+    logging.info("Relationship edges: train - %d | val - %d | test - %d",
+                 len(edges["train"]), len(edges["val"]), len(edges["test"]))
 
     logging_header("Sampling Triangles")
     logging.info("This may take a while …")
-    tris={k:sample_intra_split_triangles(splits[k],edges[k],
-         NUM_PER_CLASS if k=="train" else NUM_PER_CLASS//4,
-         K_CLASSES, args.threads,RNG_SEED) for k in splits}
-    for k in tris: logging.info("%s triangles = %d",k,len(tris[k]))
+    tris = {
+        k: sample_intra_split_triangles(
+            splits[k], edges[k], NUM_PER_CLASS if k == "train" else NUM_PER_CLASS // 8,
+            k_classes, args.threads, RNG_SEED,
+        ) for k in splits
+    }
+    for k in tris:
+        logging.info("%s triangles = %d", k, len(tris[k]))
 
-    logging.info("Processing triangles")
-    ds={k:TriDS(tris[k],emb,ani,hyp) for k in tris}
-    ld={k:DataLoader(ds[k],BATCH_SIZE,shuffle=(k=="train")) for k in ds}
+    ds = {k: TriDS(tris[k], emb, ani, hyp) for k in tris}
+    ld = {k: DataLoader(ds[k], BATCH_SIZE, shuffle=(k == "train")) for k in tris}
 
-    model=OrdTri(COMB_DIM,K_CLASSES).to(device)
-    opt=torch.optim.Adam(model.parameters(),lr=LR)
-    
+    model = OrdTri(COMB_DIM, k_classes).to(device)
+    opt = torch.optim.Adam(model.parameters(), lr=LR)
+
     logging_header("Training Edge Predictor")
-    for ep in range(1,EPOCHS+1):
-        trL,trH,trA,_=run_epoch(model,ld["train"],opt)
-        vaL,vaH,vaA,_=run_epoch(model,ld["val"])
+    for ep in range(1, EPOCHS + 1):
+        trL, trH, trA, _ = run_epoch(model, ld["train"], k_classes, nr_code, opt)
+        vaL, vaH, vaA, _ = run_epoch(model, ld["val"], k_classes, nr_code)
         logging.info("Ep%02d  train L=%.3f hit=%.3f acc=%.3f   val L=%.3f hit=%.3f acc=%.3f",
-                 ep,trL,trH,trA,vaL,vaH,vaA)
+                     ep, trL, trH, trA, vaL, vaH, vaA)
 
-    results={k:run_epoch(model,ld[k],collect_cm=True) for k in ("train","val","test")}
-    levels=list(score_config[db])
+    # Final evaluation
+    results = {k: run_epoch(model, ld[k], k_classes, nr_code, collect_cm=True) for k in ("train", "val", "test")}
+    levels = list(score_config[db])[:k_classes]
 
-    for k,(_,_,_,CM) in results.items():
-        logging.info("  — no point-label edges —" if CM is None
-              else f"{k.upper()} confusion matrix:\n{pd.DataFrame(CM,index=levels,columns=levels).to_string()}")
+    for split, (_, _, _, CM) in results.items():
+        if CM is None:
+            logging.info("%s — no point-label edges —", split.upper())
+        else:
+            logging.info("%s confusion matrix:\n%s",
+                         split.upper(), pd.DataFrame(CM, index=levels, columns=levels).to_string())
 
-    logging.info(f"\n{db}  hit={results['train'][1]:.3f}/{results['val'][1]:.3f}/{results['test'][1]:.3f}  "
-          f"acc={results['train'][2]:.3f}/{results['val'][2]:.3f}/{results['test'][2]:.3f}")
+    logging.info("\n%s  hit=%0.3f/%0.3f/%0.3f  acc=%0.3f/%0.3f/%0.3f",
+                 db, results['train'][1], results['val'][1], results['test'][1],
+                 results['train'][2], results['val'][2], results['test'][2])
 
     if EVALUATION_METRICS_ENABLED:
-        for split in ("train","val","test"):
-            CM=results[split][3];  print()
-            if CM is None: continue
-            extra=compute_eval_cm_metrics(CM,levels)
-            logging.info(f"{split.upper()} hierarchical metrics:")
-            for lvl,m in extra['per_class'].items():
-                logging.info(f"  {lvl}: prec={m['precision']:.3f}, rec={m['recall']:.3f}, "
-                      f"f1={m['f1']:.3f}, sup={m['support']}")
-            logging.info(f"  Spearman rho={extra['spearman_rho']:.3f}, "
-                  f"Kendall tau={extra['kendall_tau']:.3f}")
+        for split in ("train", "val", "test"):
+            CM = results[split][3]
+            if CM is None:
+                continue
+            extra = compute_eval_cm_metrics(CM, levels, nr_code)
+            logging.info("%s hierarchical metrics:", split.upper())
+            for lvl, m in extra["per_class"].items():
+                logging.info("  %-6s prec=%0.3f rec=%0.3f f1=%0.3f sup=%d",
+                             lvl, m["precision"], m["recall"], m["f1"], m["support"])
+            logging.info("  Spearman rho=%0.3f, Kendall tau=%0.3f",
+                         extra["spearman_rho"], extra["kendall_tau"])
     logging_header("Finished %s database", db)
 
+
+# ────────────────────── CLI entry point ──────────────────────
+
 def TestHandler(args):
-    dbs=database_info()["Class"] if args.all else [args.database]
+    dbs = database_info()["Class"] if args.all else [args.database]
     for db in dbs:
-        if db=="VOGDB": continue
-        DatabaseTesting(args,db)
+        if db == "VOGDB":
+            continue
+        DatabaseTesting(args, db)
