@@ -40,6 +40,7 @@ NOTE: If you have a viral genome with multiple contigs, you can concatenate them
 
 	>virus_contig_1
  	AAAAAAAAAAAAAAA
+  
   	>virus_contig_2
    	TTTTTTTTTTTTTTT
 
