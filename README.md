@@ -45,9 +45,9 @@ NOTE: If you have a viral genome with multiple contigs, you can concatenate them
 
 		||
   		\/
-    	>virus
-     	AAAAAAAAAAAAAA
-      	TTTTTTTTTTTTTT
+    >virus
+     AAAAAAAAAAAAAA
+      TTTTTTTTTTTTTT
 
 
 
