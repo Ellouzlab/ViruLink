@@ -23,10 +23,10 @@ A tool to classify Viruses (or at the moment, only Caudoviricetes)
 1. Get help:
    
 	`ViruLink -h`
-3. Download all databases to .cache:
+3. Download all databases to .cache (only needs to be run once, ever):
    
 	`ViruLink download --all`
-5. Process databases and build ANI and hypergeometric graphs:
+5. Process databases and build ANI and hypergeometric graphs (only needs to be run once, ever):
    
 	`ViruLink process --all`
 7. Run performance tests (Optional):
