@@ -1,5 +1,5 @@
 # ViruLink
-A tool to classify Viruses (or at the moment, only Caudoviricetes)
+A tool to classify Viruses (or at the moment, only Caudoviricetes, Monjiviricetes, and Herviviricetes)
 
 ### Download/Installation
 1. Clone this repository:
