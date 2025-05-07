@@ -36,6 +36,21 @@ A tool to classify Viruses (or at the moment, only Caudoviricetes)
 
    	`ViruLink classify --query 'PATH_TO_YOUR_QUERY' --database 'OPTION_FROM_AMONG_DATABASES' --output 'PATH_TO_OUT_CSV'`
 
+NOTE: If you have a viral genome with multiple contigs, you can concatenate them end-to-end all the contigs and use ViruLink - it won't make a difference in the results. Here is an example:
+
+	>virus_contig_1
+ 	AAAAAAAAAAAAAAA
+  	>virus_contig_2
+   	TTTTTTTTTTTTTTT
+
+		||
+  		\/
+    	>virus
+     	AAAAAAAAAAAAAA
+      	TTTTTTTTTTTTTT
+
+
+
 Please check ViruLink/ViruLink/setup/score_profiles to change what ranks can be predicted. Currently, the code in this repository will not lead to performance tests using the Evo2 encoder. Code only works on linux systems.
 
 ### Contacts
