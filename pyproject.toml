@@ -19,12 +19,11 @@ dependencies = [
     "matplotlib>=3.0.0",
     "numpy>=1.21.0",
     "torch",
-    "torch-geometric>=2.3.0",
     "scikit-learn>=1.0.0",
-    "torch-sparse>=0.6.15",
-    "torch-cluster>=1.6.0",
-    "torch-spline-conv>=1.2.1",
-    "gdown"
+    "gdown",
+    "networkx",
+    "glob2",
+    "gensim>=4.3.3"
 ]
 
 [project.scripts]

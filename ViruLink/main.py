@@ -44,10 +44,20 @@ def main():
             print(f"Logs created at {log_path}")
         
         init_logging(f"{log_path}/test.log")
-        arguments.evo2_embeddings =  '/home/sulman/Desktop/ViruLink/testing_evo2'
-        arguments.best_layer = None
-        from ViruLink.test.test_evo import TestHandler
+        from ViruLink.test.test_triangle import TestHandler
         TestHandler(arguments)
+    
+    if arguments.command == "classify":
+        log_path = f"ViruLink_logs"
+        
+        if not os.path.exists(log_path):
+            print(f"Logs not found at {log_path}")
+            os.makedirs(log_path, exist_ok=True)
+            print(f"Logs created at {log_path}")
+        
+        init_logging(f"{log_path}/classify.log")
+        from ViruLink.classify.classify import ClassifyHandler
+        ClassifyHandler(arguments, classes_df)
         
         
     if arguments.command == "single_use":

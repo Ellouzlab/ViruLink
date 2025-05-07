@@ -51,29 +51,33 @@ def DiamondCreateDB(fasta_file: str, db_name: str, force: bool = False):
         force: Overwrite the database if it already exists.
     '''
     if not os.path.exists(db_name) or force:
-        cmd = f"diamond makedb --in {fasta_file} --db {db_name}"
+        cmd = f"diamond makedb --in '{fasta_file}' --db '{db_name}'"
         run_command(cmd)
         logging.info(f"Created database {db_name} from {fasta_file}")
     else:
         logging.info(f"Database {db_name} already exists. Use --force to overwrite.")
         
-def DiamondSearchDB(VOGDB_dmnd, query, outdir, threads):
+def DiamondSearchDB(VOGDB_dmnd, query, outdir, threads, force=False):
     outfile = f"{outdir}/network.m8"
-    if not os.path.exists(outfile) or os.path.getsize(outfile) == 0:
-        cmd = f"diamond blastx --fast --db {VOGDB_dmnd} --threads {threads} --query {query} --out {outfile} --outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore"
+    if not os.path.exists(outfile) or os.path.getsize(outfile) == 0 or force:
+        cmd = f"diamond blastx --fast --db '{VOGDB_dmnd}' --threads {threads} --query '{query}' --out '{outfile}' --outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore"
         run_command(cmd)
     return outfile
 
-def CreateANISketchFolder(input_fasta, folder_path, threads, mode, force=False, ):
+def CreateANISketchFolder(input_fasta, folder_path, threads, mode):
     '''
     Take input fasta. Create a sketch for each sequence in the fasta within a folder
     Args:
         input_fasta: The path to the input FASTA file.
         folder_path: The path to the output folder where sketches will be saved.
-        force: Overwrite the sketches if they already exist.
+        threads: The number of threads to use.
+        mode: The mode to use for the sketching.
+    
+    Returns:
+        The path to the sketches text file.
     '''
-    if not os.path.exists(folder_path) or force or os.path.getsize(folder_path) == 0:
-        cmd = f"skani sketch -i {input_fasta} -o {folder_path} {mode} -t {threads}"
+    if not os.path.exists(folder_path) or os.path.getsize(folder_path) == 0:
+        cmd = f"skani sketch -i '{input_fasta}' -o '{folder_path}' {mode} -t {threads}"
         run_command(cmd)
     sketches = glob(f"{folder_path}/*.sketch")
     txt_content = '\n'.join(sketches)
@@ -82,7 +86,7 @@ def CreateANISketchFolder(input_fasta, folder_path, threads, mode, force=False, 
         f.write(txt_content)
     return txt_path
 
-def FixANIOutput(ANI_output):
+def FixANIOutput(ANI_output, ANI_frac_weights=False):
     import pandas as pd
     # Load safely
     ANI_edges = pd.read_csv(ANI_output, sep="\t", low_memory=False)
@@ -100,8 +104,10 @@ def FixANIOutput(ANI_output):
         ANI_edges["target"] = ANI_edges["target"].astype(str).map(lambda x: x.split(' ')[0])
 
         # Compute weighted ANI
-        ANI_edges["weight"] = ANI_edges["ANI"] * ANI_edges[["Align_fraction_query", "Align_fraction_ref"]].max(axis=1) / 10000
-        #ANI_edges["weight"] = ANI_edges["ANI"]
+        if ANI_frac_weights:
+            ANI_edges["weight"] = ANI_edges["ANI"] * ANI_edges[["Align_fraction_query", "Align_fraction_ref"]].max(axis=1) / 10000
+        else:
+            ANI_edges["weight"] = ANI_edges["ANI"]
         # Drop unwanted columns
         cols_to_drop = ["Ref_file", "Query_file", "Align_fraction_query", "Align_fraction_ref", "ANI"]
         ANI_edges = ANI_edges.drop(columns=cols_to_drop, errors="ignore")
@@ -111,7 +117,7 @@ def FixANIOutput(ANI_output):
     return ANI_edges
 
 
-def ANIDist(ref_sketches_txt, query_sketches_txt, output, threads, mode, force=False):
+def ANIDist(ref_sketches_txt, query_sketches_txt, output, threads, mode, force=False, ANI_frac_weights=False):
     '''
     Calculate ANI distances between two sets of sketches.
     
@@ -130,9 +136,9 @@ def ANIDist(ref_sketches_txt, query_sketches_txt, output, threads, mode, force=F
         if not os.path.exists(query_sketches_txt):
             logging.error(f"Query sketches file {query_sketches_txt} does not exist.")
             sys.exit(1)
-        cmd = f"skani dist --rl {ref_sketches_txt} --ql {query_sketches_txt} -o {output} -t {threads} {mode}"
+        cmd = f"skani dist --rl '{ref_sketches_txt}' --ql '{query_sketches_txt}' -o '{output}' -t {threads} {mode}"
         run_command(cmd)
         
-    ANI_edges = FixANIOutput(output)
+    ANI_edges = FixANIOutput(output, ANI_frac_weights)
     return ANI_edges
     

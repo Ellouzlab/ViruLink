@@ -1,5 +1,5 @@
 from ViruLink.search_utils import DiamondCreateDB, DiamondSearchDB, CreateANISketchFolder, ANIDist
-from ViruLink.utils import edge_list_to_presence_absence, compute_hypergeom_pvalues, create_graph, running_message, get_file_path
+from ViruLink.utils import edge_list_to_presence_absence, compute_hypergeom_weights, create_graph, running_message, get_file_path, logging_header
 from ViruLink.setup.databases import database_info
 import os, logging, sys
 from glob import glob
@@ -38,8 +38,8 @@ def generate_database(class_data, unproc_path):
     DiamondCreateDB(get_file_path(unproc_path,"faa"), db_outpath, force=True)
     return db_outpath
 
-def m8_processor(m8_file, class_data, eval_threshold, bitscore_threshold, edge_list_path):
-    if not os.path.exists(edge_list_path):
+def m8_processor(m8_file, class_data, eval_threshold, bitscore_threshold, edge_list_path, force = False):
+    if not os.path.exists(edge_list_path) or os.path.getsize(edge_list_path) == 0  or force:
         columns = ["query", "target", "pident", "alnlen", "mismatch", "numgapopen",
                 "qstart", "qend", "tstart", "tend", "evalue", "bitscore"]
 
@@ -67,6 +67,7 @@ def ProcessHandler(arguments, classes_df):
     database_parameter = database_info()
     if arguments.all:
         
+        logging_header("Prepping VOGDB")
         VOGDB_path = paths_to_unprocs["VOGDB"]
         VOGDB_dmnd = generate_database("VOGDB", VOGDB_path)
         
@@ -77,23 +78,27 @@ def ProcessHandler(arguments, classes_df):
             else:
                 fasta_path=get_file_path(unproc_path, "fasta")
 
-                m8_files[class_data] = DiamondSearchDB(VOGDB_dmnd, fasta_path, unproc_path, arguments.threads)
+                logging_header(f"Running VOGDB vs {class_data} blast")
+                m8_files[class_data] = DiamondSearchDB(VOGDB_dmnd, fasta_path, unproc_path, arguments.threads, force=arguments.force)
         
-        for class_data, m8_file in m8_files.items():    
+        for class_data, m8_file in m8_files.items():
+            logging_header(f"Reading {class_data} m8 file")    
             meta = pd.read_csv(f"{arguments.databases_loc}/{class_data}/{class_data}.csv") #unprocessed in same
             edge_list = f"{arguments.databases_loc}/{class_data}/edge_list.txt" #processed in same
             
             # Create edge list from the m8 file
-            m8_processor(m8_file, class_data, arguments.eval, arguments.bitscore, edge_list)
+            m8_processor(m8_file, class_data, arguments.eval, arguments.bitscore, edge_list, force=arguments.force)
             
             # Build presence-absence
             pa = edge_list_to_presence_absence(edge_list)
             
             
             out_hypergeom_edges = f"{arguments.databases_loc}/{class_data}/hypergeom_edges.csv"
-            if not os.path.exists(out_hypergeom_edges):
-                pval = compute_hypergeom_pvalues(pa, arguments.threads)
-                sources, destinations, weights = create_graph(pval, threshold = -math.log10(0.05))
+            if not os.path.exists(out_hypergeom_edges) or os.path.getsize(out_hypergeom_edges) == 0 or arguments.force:
+                logging_header(f"Generating gene-sharing network for {class_data}")
+                w_mat = compute_hypergeom_weights(pa, arguments.threads)
+                sources, destinations, weights = create_graph(w_mat, threshold=0.0)  # keep w>0
+
                 pd.DataFrame({"source": sources, "target": destinations, "weight": weights}).to_csv(f"{arguments.databases_loc}/{class_data}/hypergeom_edges.csv", index=False)
             else:
                 logging.info(f"Hypergeom edges already exist at {out_hypergeom_edges}")
@@ -119,12 +124,13 @@ def ProcessHandler(arguments, classes_df):
                 skani_sketch_mode = parameters["skani_sketch_mode"].values[0]
                 skani_dist_mode = parameters["skani_dist_mode"].values[0]
                 
+                logging_header(f"Creating ANI Network for {database}")
                 logging.info(f"Creating ANI sketches for {database} in {ANI_sketch_folder} using {skani_sketch_mode} mode.")
                 sketch_paths_txt = CreateANISketchFolder(fasta_path, ANI_sketch_folder, arguments.threads, skani_sketch_mode)
                 
                 logging.info(f"Calculating ANI distances for {database} using {skani_dist_mode} mode.")
                 output_path = f"{database_path}/self_ANI.tsv"
-                ANI_edges = ANIDist(sketch_paths_txt, sketch_paths_txt, output_path, arguments.threads, skani_dist_mode)
+                ANI_edges = ANIDist(sketch_paths_txt, sketch_paths_txt, output_path, arguments.threads, skani_dist_mode, arguments.force, arguments.ANI_FRAC_weights)
                 
                 '''
                 # Draw the taxonomic subgraphs

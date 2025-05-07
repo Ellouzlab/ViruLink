@@ -6,7 +6,7 @@ def verify(arguments):
     '''
     Verify the arguments passed to the program.
     '''
-    subcommands = ["download", "process","test" ,"single_use"]
+    subcommands = ["download", "process","test" ,"single_use", "classify"]
     if arguments.command not in subcommands:
         print("Please specify a valid command.")
         print("Available commands:", subcommands)
@@ -72,12 +72,31 @@ def argparser(classes):
     process_parser.add_argument("--memory", help="memory to use (default is 16G)", default="16G")
     process_parser.add_argument("--bitscore", help="bitscore to use", default=50, type=int)
     process_parser.add_argument("--eval", help="evalue to use", default=0.00001, type=float)
+    process_parser.add_argument("--force", help="force reprocessing of database", action="store_true")
+    process_parser.add_argument("--ANI_FRAC_weights", help="weights for calculated with a product of ANI + ANI Frac", action="store_true")
     
     test_parser = subparsers.add_parser('test', help='Run Tests')
     test_parser.add_argument("--databases_loc", help=f"location of database to process default: {Path.home()}/.cache/ViruLink", choices=classes, default=f"{Path.home()}/.cache/ViruLink")
     test_parser.add_argument("--database", help="database to process", choices=classes, default=None)
     test_parser.add_argument("--all", help="output directory", action="store_true")
     test_parser.add_argument("--threads", help="number of threads to use", default=cpu_count(), type=int)
+    
+    
+    classify_parser = subparsers.add_parser('classify', help='Classify a sequence')
+    classify_parser.add_argument("--database", help="database to use as reference", choices=classes, default=None)
+    classify_parser.add_argument("--database_loc", help=f"location of database to process default: {Path.home()}/.cache/ViruLink", choices=classes, default=f"{Path.home()}/.cache/ViruLink")
+    classify_parser.add_argument("--threads", help="number of threads to use", default=cpu_count(), type=int)
+    classify_parser.add_argument("--query", help="query file to classify", required=True)
+    classify_parser.add_argument("--output", help="output directory", default=f"{Path.home()}/.cache/ViruLink")
+    classify_parser.add_argument("--eval", help="evalue to use", default=0.00001, type=float)
+    classify_parser.add_argument("--bitscore", help="bitscore to use", default=50, type=int)
+    classify_parser.add_argument("--temp_dir", help="temporary directory to use", default=f"tmp")
+    classify_parser.add_argument("--keep_temp", help="keep temporary files", action="store_true")
+    classify_parser.add_argument(
+        "--ANI_FRAC_weights",
+        help="weights for calculated with a product of ANI + ANI Frac ONLY USE THIS MODE IF YOU USED IT DURING THE PROCESS COMMAND",
+        action="store_true"
+    )
     
     '''Not meant for general use, but for preparations of databases'''
     single_use_parser = subparsers.add_parser('single_use', help='Run a single use script, Not meant for general users')

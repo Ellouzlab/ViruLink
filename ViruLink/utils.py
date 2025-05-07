@@ -55,47 +55,54 @@ def init_logging(log_filename: str):
 
 def run_command(cmd, **kwargs):
     """
-    Run a command in the shell and log the output.
+    Run *cmd* and stream its stdout/stderr in real-time to both the console
+    and the log file handled by the logging system.
 
-    Args:
-        cmd: The command to run.
-        kwargs: Keyword arguments to pass to subprocess.Popen.
-
-    Returns:
-        A subprocess.CompletedProcess instance with stdout and stderr.
+    Returns
+    -------
+    subprocess.CompletedProcess
     """
-    if not 'stderr' in kwargs:
-        kwargs['stderr'] = subprocess.PIPE
-    if not 'stdout' in kwargs:
-        kwargs['stdout'] = subprocess.PIPE
-    if not 'text' in kwargs:
-        kwargs['text'] = True
-    if not 'bufsize' in kwargs:
-        kwargs['bufsize'] = 1
+    # ---------- default Popen flags --------------------------------------
+    kw = kwargs.copy()
+    kw.setdefault("text", True)            # decode bytes → str
+    kw.setdefault("bufsize", 1)            # line-buffered
+    kw.setdefault("stdout", subprocess.PIPE)
+    kw.setdefault("stderr", subprocess.STDOUT)  # merge both streams
 
-    logging.info(f"Running command: {cmd}")
-
-    # If shell is True, we don't need to split the command
-    if kwargs.get('shell', False):
-        cmd_list = cmd
+    # ---------- command list ---------------------------------------------
+    if kw.get("shell", False):
+        cmd_list = cmd                     # user handles quoting
     else:
         cmd_list = shlex.split(cmd)
 
-    process = subprocess.Popen(cmd_list, **kwargs)
-    stdout, stderr = process.communicate()
-    return_code = process.returncode
+    logging.info(f"Running command: {cmd}")
 
-    if stdout:
-        logging.info(stdout.strip())
-    if stderr:
-        logging.error(stderr.strip())
+    # ---------- launch & stream ------------------------------------------
+    proc = subprocess.Popen(cmd_list, **kw)
+    captured = []                          # keep lines if caller wants them
 
-    if return_code:
-        logging.error(f"Command '{cmd}' failed with return code {return_code}")
-        raise subprocess.CalledProcessError(return_code, cmd, output=stdout, stderr=stderr)
+    try:
+        for line in proc.stdout:           # iterates line-by-line
+            line = line.rstrip("\n")
+            captured.append(line)
+            logging.info(line)             # TeeHandler writes to file + console
+
+        proc.wait()                        # ensure the process is done
+    except Exception:                      # propagate logging on Ctrl-C, etc.
+        proc.kill()
+        proc.wait()
+        raise
+
+    # ---------- error handling -------------------------------------------
+    if proc.returncode != 0:
+        logging.error(f"Command '{cmd}' failed with return code {proc.returncode}")
+        raise subprocess.CalledProcessError(proc.returncode, cmd,
+                                            output="\n".join(captured))
 
     logging.info(f"Command '{cmd}' completed successfully")
-    return subprocess.CompletedProcess(cmd, return_code, stdout, stderr)
+
+    return subprocess.CompletedProcess(cmd, proc.returncode,
+                                       "\n".join(captured), "")
 
 
 def running_message(function):
@@ -149,9 +156,7 @@ def running_message(function):
 
     return wrapper
 
-import os
-from tqdm import tqdm
-from Bio import SeqIO
+
 
 def read_fasta(fastafile):
     # Get the total size of the file
@@ -220,38 +225,56 @@ def edge_list_to_presence_absence(edge_list_path):
     return presence_absence_matrix
 
 
-def compute_hypergeom_pvalues(pa_matrix: pd.DataFrame, nthreads: int = 1) -> pd.DataFrame:
+
+
+def compute_hypergeom_weights(pa_matrix: pd.DataFrame,
+                              nthreads: int = 1,
+                              pval_thresh: float = 0.01,
+                              max_freq: float = 0.80) -> pd.DataFrame:
+    """
+    Compute the shared-protein weight matrix for all genome pairs.
+
+    Parameters
+    ----------
+    pa_matrix : DataFrame [G × P] (bool / 0-1)
+        Presence/absence matrix: rows = genomes, columns = proteins.
+    nthreads : int
+        OpenMP thread count for the C++ kernel.
+    pval_thresh : float
+        One-sided hyper-geometric tail threshold (default 0.01).
+    max_freq : float
+        Columns present in > max_freq * G genomes are discarded
+        before any calculation (default 0.80).
+
+    Returns
+    -------
+    DataFrame [G × G] (float)
+        Symmetric matrix with entries
+            0                       if p-value  > pval_thresh
+            c / min(k_i, k_j) (0,1] if p-value ≤ pval_thresh
+    """
+    # --- call the kernel -------------------------------------------------
     from ViruLink.hypergeom import hypergeom
-    """
-    Given a presence-absence DataFrame (rows = genomes, columns = proteins),
-    compute the pairwise hypergeometric p-values (directly computed in C++),
-    then:
-      - Replace p-values > 0.05 with 1.0,
-      - Clip to avoid log(0),
-      - Take -log(p-value).
-    
-    Returns an NxN DataFrame of -log(p-values).
-    """
-    # Ensure that rows are genomes and columns are proteins.
     bool_array = np.ascontiguousarray(pa_matrix.values.astype(bool))
-    
-    # Compute the dense p-value matrix directly.
-    pval_matrix = hypergeom.compute_hypergeom(bool_array, nthreads)
-    # Convert p-values into a DataFrame (preserving row labels).
-    row_labels = pa_matrix.index
-    pvals_df = pd.DataFrame(pval_matrix, index=row_labels, columns=row_labels)
-    # Replace p-values > 0.05 with 1.0.
-    alpha = 0.05
-    pvals_df[pvals_df > alpha] = 1.0
-    
-    # Clip to avoid log(0) (if p-value is 0, clip it to a small eps).
-    eps = 1e-100
-    pvals_df = pvals_df.clip(lower=eps, upper=1.0)
-    
-    # Now take -log of the p-value.
-    pvals_df = -np.log(pvals_df)
-    
-    return pvals_df
+
+    w_mat = hypergeom.compute_hypergeom(bool_array,
+                                        nthreads=nthreads,
+                                        pval_thresh=pval_thresh,
+                                        max_freq=max_freq)
+
+    # --- diagnostics -----------------------------------------------------
+    total_pairs   = (w_mat.size - w_mat.shape[0]) // 2
+    nonzero_pairs = (w_mat > 0).sum()             // 2
+    zero_pairs    = total_pairs - nonzero_pairs
+
+    print("[hypergeom] total genome pairs        :", total_pairs)
+    print("[hypergeom] pairs with non-zero weight:", nonzero_pairs)
+    print("[hypergeom] pairs with zero weight    :", zero_pairs)
+
+    # --- wrap in DataFrame ----------------------------------------------
+    idx = pa_matrix.index
+    return pd.DataFrame(w_mat, index=idx, columns=idx)
+
 
 def create_graph(pval_df: pd.DataFrame, threshold: float = 0.1) -> tuple:
     """
@@ -282,7 +305,7 @@ def create_graph(pval_df: pd.DataFrame, threshold: float = 0.1) -> tuple:
     weights = matrix[row_indices, col_indices]
 
     # Apply threshold to filter edges
-    mask = weights >= threshold
+    mask = weights > threshold
     row_indices = row_indices[mask]
     col_indices = col_indices[mask]
     weights = weights[mask]
@@ -443,3 +466,9 @@ def plot_tsne_embeddings(emb_dict):
     fig.show()
 
 
+def logging_header(message: str, *args, width: int = 70):
+    formatted = message % args if args else message
+    centered = f" {formatted.upper()} ".center(width, "=")
+    logging.info("=" * width)
+    logging.info(centered)
+    logging.info("=" * width)
