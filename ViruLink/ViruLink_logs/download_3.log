@@ -1,0 +1,2 @@
+2025-05-08 10:01:28,845 - INFO - Downloading Herviviricetes unprocessed data.
+2025-05-08 10:01:33,412 - ERROR - CSV at /home/biolinux/.cache/ViruLink/Herviviricetes/hypergeom_edges.csv missing required columns 'Assembly' or 'Accession'.

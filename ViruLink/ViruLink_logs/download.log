@@ -1,0 +1,27 @@
+2025-05-08 08:29:13,492 - INFO - Downloading ICTV MSL data to /home/biolinux/.cache/ViruLink/ictv, since none available.
+2025-05-08 08:29:19,122 - INFO - Starting download of VOG database from https://fileshare.csb.univie.ac.at/vog/vog227/vog.faa.tar.gz...
+2025-05-08 08:29:31,895 - INFO - Downloaded tarball to /home/biolinux/.cache/ViruLink/VOGDB/vog.faa.tar.gz
+2025-05-08 08:29:31,895 - INFO - Extracting the tarball...
+2025-05-08 08:29:41,770 - INFO - Extracted files to /home/biolinux/.cache/ViruLink/VOGDB
+2025-05-08 08:29:41,770 - INFO - Removing the tarball: /home/biolinux/.cache/ViruLink/VOGDB/vog.faa.tar.gz
+2025-05-08 08:29:41,782 - INFO - Removed the tarball /home/biolinux/.cache/ViruLink/VOGDB/vog.faa.tar.gz
+2025-05-08 08:29:41,782 - INFO - Merging VOGs from folder: /home/biolinux/.cache/ViruLink/VOGDB/faa
+2025-05-08 08:29:46,591 - INFO - Consolidated FASTA file created at /home/biolinux/.cache/ViruLink/VOGDB/vogdb_merged.faa
+2025-05-08 08:29:46,591 - INFO - Deleting the faa folder: /home/biolinux/.cache/ViruLink/VOGDB/faa
+2025-05-08 08:29:47,568 - INFO - Deleted the faa folder /home/biolinux/.cache/ViruLink/VOGDB/faa
+2025-05-08 08:29:47,568 - INFO - Consolidated VOG database created at /home/biolinux/.cache/ViruLink/VOGDB/vogdb_merged.faa
+2025-05-08 08:29:47,618 - INFO - Downloading Caudoviricetes unprocessed data.
+2025-05-08 08:29:47,618 - INFO - Downloading https://drive.google.com/drive/folders/1n8c7zDcGxfq8HjueIt2rt-GfDrLCbtya?usp=drive_link to /home/biolinux/.cache/ViruLink/Caudoviricetes
+2025-05-08 08:30:38,595 - INFO - Downloaded https://drive.google.com/drive/folders/1n8c7zDcGxfq8HjueIt2rt-GfDrLCbtya?usp=drive_link to /home/biolinux/.cache/ViruLink/Caudoviricetes
+2025-05-08 08:30:49,914 - INFO - Updated DataFrame saved to /home/biolinux/.cache/ViruLink/Caudoviricetes/Caudoviricetes.csv.
+2025-05-08 08:30:49,914 - INFO - Updated FASTA file saved to /home/biolinux/.cache/ViruLink/Caudoviricetes/Caudoviricetes.fasta.
+2025-05-08 08:30:50,172 - INFO - Downloading Herviviricetes unprocessed data.
+2025-05-08 08:30:50,172 - INFO - Downloading https://drive.google.com/drive/folders/1TI5qJ7Gsdp0ksqAUlD_kAsbdCe4LtsWk?usp=drive_link to /home/biolinux/.cache/ViruLink/Herviviricetes
+2025-05-08 08:31:46,485 - INFO - Downloaded https://drive.google.com/drive/folders/1TI5qJ7Gsdp0ksqAUlD_kAsbdCe4LtsWk?usp=drive_link to /home/biolinux/.cache/ViruLink/Herviviricetes
+2025-05-08 08:31:56,124 - INFO - Updated DataFrame saved to /home/biolinux/.cache/ViruLink/Herviviricetes/Herviviricetes.csv.
+2025-05-08 08:31:56,125 - INFO - Updated FASTA file saved to /home/biolinux/.cache/ViruLink/Herviviricetes/Herviviricetes.fasta.
+2025-05-08 08:31:56,262 - INFO - Downloading Monjiviricetes unprocessed data.
+2025-05-08 08:31:56,282 - INFO - Downloading https://drive.google.com/drive/folders/1EwIf_UGogrN9zAKJbJbaYEJK4RFTP_Rf?usp=drive_link to /home/biolinux/.cache/ViruLink/Monjiviricetes
+2025-05-08 08:32:07,545 - INFO - Downloaded https://drive.google.com/drive/folders/1EwIf_UGogrN9zAKJbJbaYEJK4RFTP_Rf?usp=drive_link to /home/biolinux/.cache/ViruLink/Monjiviricetes
+2025-05-08 08:32:08,629 - INFO - Updated DataFrame saved to /home/biolinux/.cache/ViruLink/Monjiviricetes/Monjiviricetes.csv.
+2025-05-08 08:32:08,630 - INFO - Updated FASTA file saved to /home/biolinux/.cache/ViruLink/Monjiviricetes/Monjiviricetes.fasta.

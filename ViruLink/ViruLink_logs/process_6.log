@@ -1,0 +1,91 @@
+2025-05-08 10:20:06,756 - INFO - Time: 10:20:06 - Running get_paths_dict with inputs: get_paths_dict(databases_loc='/home/biolinux/.cache/ViruLink', classes_df=DataFrame(4 rows x 5 columns))
+2025-05-08 10:20:06,757 - INFO - Checking for Caudoviricetes unprocessed data.
+2025-05-08 10:20:06,757 - INFO - Found Caudoviricetes unprocessed data at /home/biolinux/.cache/ViruLink/Caudoviricetes
+2025-05-08 10:20:06,757 - INFO - Checking for Herviviricetes unprocessed data.
+2025-05-08 10:20:06,757 - INFO - Found Herviviricetes unprocessed data at /home/biolinux/.cache/ViruLink/Herviviricetes
+2025-05-08 10:20:06,757 - INFO - Checking for Monjiviricetes unprocessed data.
+2025-05-08 10:20:06,757 - INFO - Found Monjiviricetes unprocessed data at /home/biolinux/.cache/ViruLink/Monjiviricetes
+2025-05-08 10:20:06,757 - INFO - Checking for Leviviricetes unprocessed data.
+2025-05-08 10:20:06,757 - INFO - Found Leviviricetes unprocessed data at /home/biolinux/.cache/ViruLink/Leviviricetes
+2025-05-08 10:20:06,757 - INFO - Found VOGDB unprocessed data at /home/biolinux/.cache/ViruLink/VOGDB
+2025-05-08 10:20:06,757 - INFO - Time: 10:20:06 - get_paths_dict Completed
+2025-05-08 10:20:06,757 - INFO - Total time taken: 0.00 seconds
+2025-05-08 10:20:06,758 - INFO - ======================================================================
+2025-05-08 10:20:06,758 - INFO - =========================== PREPPING VOGDB ===========================
+2025-05-08 10:20:06,758 - INFO - ======================================================================
+2025-05-08 10:20:06,758 - INFO - Running command: diamond makedb --in '/home/biolinux/.cache/ViruLink/VOGDB/vogdb_merged.faa' --db '/home/biolinux/.cache/ViruLink/VOGDB/VOGDB'
+2025-05-08 10:20:06,763 - INFO - diamond v2.1.11.165 (C) Max Planck Society for the Advancement of Science, Benjamin Buchfink, University of Tuebingen
+2025-05-08 10:20:06,764 - INFO - Documentation, support and updates available at http://www.diamondsearch.org
+2025-05-08 10:20:06,764 - INFO - Please cite: http://dx.doi.org/10.1038/s41592-021-01101-x Nature Methods (2021)
+2025-05-08 10:20:06,764 - INFO - 
+2025-05-08 10:20:06,764 - INFO - #CPU threads: 48
+2025-05-08 10:20:06,764 - INFO - Scoring parameters: (Matrix=BLOSUM62 Lambda=0.267 K=0.041 Penalties=11/1)
+2025-05-08 10:20:06,766 - INFO - Database input file: /home/biolinux/.cache/ViruLink/VOGDB/vogdb_merged.faa
+2025-05-08 10:20:06,773 - INFO - Opening the database file...  [0.007s]
+2025-05-08 10:20:06,937 - INFO - Loading sequences...  [0.164s]
+2025-05-08 10:20:06,991 - INFO - Masking sequences...  [0.053s]
+2025-05-08 10:20:07,009 - INFO - Writing sequences...  [0.018s]
+2025-05-08 10:20:07,016 - INFO - Hashing sequences...  [0.007s]
+2025-05-08 10:20:07,016 - INFO - Loading sequences...  [0s]
+2025-05-08 10:20:07,017 - INFO - Writing trailer...  [0s]
+2025-05-08 10:20:07,017 - INFO - Closing the input file...  [0s]
+2025-05-08 10:20:07,058 - INFO - Closing the database file...  [0.041s]
+2025-05-08 10:20:07,058 - INFO - 
+2025-05-08 10:20:07,058 - INFO - Database sequences  60257
+2025-05-08 10:20:07,059 - INFO -   Database letters  12854521
+2025-05-08 10:20:07,059 - INFO -      Database hash  6c50d057679f9534599d6728e332e246
+2025-05-08 10:20:07,059 - INFO -         Total time  0.292000s
+2025-05-08 10:20:07,063 - INFO - Command 'diamond makedb --in '/home/biolinux/.cache/ViruLink/VOGDB/vogdb_merged.faa' --db '/home/biolinux/.cache/ViruLink/VOGDB/VOGDB'' completed successfully
+2025-05-08 10:20:07,063 - INFO - Created database /home/biolinux/.cache/ViruLink/VOGDB/VOGDB from /home/biolinux/.cache/ViruLink/VOGDB/vogdb_merged.faa
+2025-05-08 10:20:07,064 - INFO - ======================================================================
+2025-05-08 10:20:07,064 - INFO - =============== RUNNING VOGDB VS CAUDOVIRICETES BLAST ================
+2025-05-08 10:20:07,064 - INFO - ======================================================================
+2025-05-08 10:20:07,064 - INFO - ======================================================================
+2025-05-08 10:20:07,064 - INFO - =============== RUNNING VOGDB VS HERVIVIRICETES BLAST ================
+2025-05-08 10:20:07,064 - INFO - ======================================================================
+2025-05-08 10:20:07,065 - INFO - ======================================================================
+2025-05-08 10:20:07,065 - INFO - =============== RUNNING VOGDB VS MONJIVIRICETES BLAST ================
+2025-05-08 10:20:07,065 - INFO - ======================================================================
+2025-05-08 10:20:07,065 - INFO - ======================================================================
+2025-05-08 10:20:07,065 - INFO - ================ RUNNING VOGDB VS LEVIVIRICETES BLAST ================
+2025-05-08 10:20:07,065 - INFO - ======================================================================
+2025-05-08 10:20:07,065 - INFO - ======================================================================
+2025-05-08 10:20:07,065 - INFO - ================= PROCESSING CAUDOVIRICETES M8 FILE ==================
+2025-05-08 10:20:07,065 - INFO - ======================================================================
+2025-05-08 10:20:07,065 - INFO - Edge list already exists at /home/biolinux/.cache/ViruLink/Caudoviricetes/edge_list.txt
+2025-05-08 10:20:10,042 - INFO - Hypergeom edges already exist at /home/biolinux/.cache/ViruLink/Caudoviricetes/hypergeom_edges.csv
+2025-05-08 10:20:10,042 - INFO - ======================================================================
+2025-05-08 10:20:10,042 - INFO - ================= PROCESSING HERVIVIRICETES M8 FILE ==================
+2025-05-08 10:20:10,043 - INFO - ======================================================================
+2025-05-08 10:20:10,043 - INFO - Edge list already exists at /home/biolinux/.cache/ViruLink/Herviviricetes/edge_list.txt
+2025-05-08 10:20:10,121 - INFO - Hypergeom edges already exist at /home/biolinux/.cache/ViruLink/Herviviricetes/hypergeom_edges.csv
+2025-05-08 10:20:10,122 - INFO - ======================================================================
+2025-05-08 10:20:10,122 - INFO - ================= PROCESSING MONJIVIRICETES M8 FILE ==================
+2025-05-08 10:20:10,122 - INFO - ======================================================================
+2025-05-08 10:20:10,122 - INFO - Edge list already exists at /home/biolinux/.cache/ViruLink/Monjiviricetes/edge_list.txt
+2025-05-08 10:20:10,140 - INFO - Hypergeom edges already exist at /home/biolinux/.cache/ViruLink/Monjiviricetes/hypergeom_edges.csv
+2025-05-08 10:20:10,140 - INFO - ======================================================================
+2025-05-08 10:20:10,140 - INFO - ================== PROCESSING LEVIVIRICETES M8 FILE ==================
+2025-05-08 10:20:10,140 - INFO - ======================================================================
+2025-05-08 10:20:10,140 - INFO - Edge list already exists at /home/biolinux/.cache/ViruLink/Leviviricetes/edge_list.txt
+2025-05-08 10:20:10,152 - INFO - Hypergeom edges already exist at /home/biolinux/.cache/ViruLink/Leviviricetes/hypergeom_edges.csv
+2025-05-08 10:20:10,153 - INFO - ======================================================================
+2025-05-08 10:20:10,153 - INFO - ============== CREATING ANI NETWORK FOR CAUDOVIRICETES ===============
+2025-05-08 10:20:10,153 - INFO - ======================================================================
+2025-05-08 10:20:10,153 - INFO - Creating ANI sketches in /home/biolinux/.cache/ViruLink/Caudoviricetes/ANI_sketch using --medium mode.
+2025-05-08 10:20:10,166 - INFO - Calculating ANI distances (--medium mode).
+2025-05-08 10:20:10,226 - INFO - ======================================================================
+2025-05-08 10:20:10,226 - INFO - ============== CREATING ANI NETWORK FOR HERVIVIRICETES ===============
+2025-05-08 10:20:10,226 - INFO - ======================================================================
+2025-05-08 10:20:10,226 - INFO - Creating ANI sketches in /home/biolinux/.cache/ViruLink/Herviviricetes/ANI_sketch using --medium mode.
+2025-05-08 10:20:10,231 - INFO - Calculating ANI distances (--medium mode).
+2025-05-08 10:20:10,407 - INFO - ======================================================================
+2025-05-08 10:20:10,407 - INFO - ============== CREATING ANI NETWORK FOR MONJIVIRICETES ===============
+2025-05-08 10:20:10,407 - INFO - ======================================================================
+2025-05-08 10:20:10,408 - INFO - Creating ANI sketches in /home/biolinux/.cache/ViruLink/Monjiviricetes/ANI_sketch using --medium mode.
+2025-05-08 10:20:10,412 - INFO - Calculating ANI distances (--small-genomes mode).
+2025-05-08 10:20:10,424 - INFO - ======================================================================
+2025-05-08 10:20:10,424 - INFO - =============== CREATING ANI NETWORK FOR LEVIVIRICETES ===============
+2025-05-08 10:20:10,424 - INFO - ======================================================================
+2025-05-08 10:20:10,424 - INFO - Creating ANI sketches in /home/biolinux/.cache/ViruLink/Leviviricetes/ANI_sketch using --medium mode.
+2025-05-08 10:20:10,427 - INFO - Calculating ANI distances (--small-genomes mode).

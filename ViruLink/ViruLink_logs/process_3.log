@@ -1,0 +1,12 @@
+2025-05-08 10:11:39,817 - INFO - Time: 10:11:39 - Running get_paths_dict with inputs: get_paths_dict(databases_loc='/home/biolinux/.cache/ViruLink', classes_df=DataFrame(4 rows x 5 columns))
+2025-05-08 10:11:39,818 - INFO - Checking for Caudoviricetes unprocessed data.
+2025-05-08 10:11:39,818 - INFO - Found Caudoviricetes unprocessed data at /home/biolinux/.cache/ViruLink/Caudoviricetes
+2025-05-08 10:11:39,818 - INFO - Checking for Herviviricetes unprocessed data.
+2025-05-08 10:11:39,818 - INFO - Found Herviviricetes unprocessed data at /home/biolinux/.cache/ViruLink/Herviviricetes
+2025-05-08 10:11:39,818 - INFO - Checking for Monjiviricetes unprocessed data.
+2025-05-08 10:11:39,818 - INFO - Found Monjiviricetes unprocessed data at /home/biolinux/.cache/ViruLink/Monjiviricetes
+2025-05-08 10:11:39,818 - INFO - Checking for Leviviricetes unprocessed data.
+2025-05-08 10:11:39,818 - INFO - Found Leviviricetes unprocessed data at /home/biolinux/.cache/ViruLink/Leviviricetes
+2025-05-08 10:11:39,818 - INFO - Found VOGDB unprocessed data at /home/biolinux/.cache/ViruLink/VOGDB
+2025-05-08 10:11:39,818 - INFO - Time: 10:11:39 - get_paths_dict Completed
+2025-05-08 10:11:39,818 - INFO - Total time taken: 0.00 seconds

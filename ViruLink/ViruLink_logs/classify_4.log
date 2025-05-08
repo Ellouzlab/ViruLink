@@ -1,0 +1,401 @@
+2025-05-08 09:37:03,418 - INFO - ======================================================================
+2025-05-08 09:37:03,418 - INFO - ================ ADDING QUERY SEQUENCES TO HYP GRAPH =================
+2025-05-08 09:37:03,418 - INFO - ======================================================================
+2025-05-08 09:37:03,419 - INFO - Checking for Caudoviricetes unprocessed data.
+2025-05-08 09:37:03,419 - INFO - Found Caudoviricetes unprocessed data at /home/biolinux/.cache/ViruLink/Caudoviricetes
+2025-05-08 09:37:03,419 - INFO - Checking for Herviviricetes unprocessed data.
+2025-05-08 09:37:03,419 - INFO - Found Herviviricetes unprocessed data at /home/biolinux/.cache/ViruLink/Herviviricetes
+2025-05-08 09:37:03,419 - INFO - Checking for Monjiviricetes unprocessed data.
+2025-05-08 09:37:03,419 - INFO - Found Monjiviricetes unprocessed data at /home/biolinux/.cache/ViruLink/Monjiviricetes
+2025-05-08 09:37:03,419 - INFO - Found VOGDB unprocessed data at /home/biolinux/.cache/ViruLink/VOGDB
+2025-05-08 09:37:03,514 - INFO - blasting query against VOGDB
+2025-05-08 09:37:03,515 - INFO - Running command: diamond makedb --in '/home/biolinux/.cache/ViruLink/VOGDB/vogdb_merged.faa' --db '/home/biolinux/.cache/ViruLink/VOGDB/VOGDB'
+2025-05-08 09:37:03,521 - INFO - diamond v2.1.11.165 (C) Max Planck Society for the Advancement of Science, Benjamin Buchfink, University of Tuebingen
+2025-05-08 09:37:03,521 - INFO - Documentation, support and updates available at http://www.diamondsearch.org
+2025-05-08 09:37:03,521 - INFO - Please cite: http://dx.doi.org/10.1038/s41592-021-01101-x Nature Methods (2021)
+2025-05-08 09:37:03,521 - INFO - 
+2025-05-08 09:37:03,521 - INFO - #CPU threads: 48
+2025-05-08 09:37:03,521 - INFO - Scoring parameters: (Matrix=BLOSUM62 Lambda=0.267 K=0.041 Penalties=11/1)
+2025-05-08 09:37:03,524 - INFO - Database input file: /home/biolinux/.cache/ViruLink/VOGDB/vogdb_merged.faa
+2025-05-08 09:37:03,532 - INFO - Opening the database file...  [0.008s]
+2025-05-08 09:37:03,698 - INFO - Loading sequences...  [0.165s]
+2025-05-08 09:37:03,755 - INFO - Masking sequences...  [0.057s]
+2025-05-08 09:37:03,774 - INFO - Writing sequences...  [0.018s]
+2025-05-08 09:37:03,781 - INFO - Hashing sequences...  [0.006s]
+2025-05-08 09:37:03,781 - INFO - Loading sequences...  [0s]
+2025-05-08 09:37:03,781 - INFO - Writing trailer...  [0s]
+2025-05-08 09:37:03,781 - INFO - Closing the input file...  [0s]
+2025-05-08 09:37:03,842 - INFO - Closing the database file...  [0.06s]
+2025-05-08 09:37:03,842 - INFO - 
+2025-05-08 09:37:03,842 - INFO - Database sequences  60257
+2025-05-08 09:37:03,842 - INFO -   Database letters  12854521
+2025-05-08 09:37:03,843 - INFO -      Database hash  6c50d057679f9534599d6728e332e246
+2025-05-08 09:37:03,843 - INFO -         Total time  0.318000s
+2025-05-08 09:37:03,848 - INFO - Command 'diamond makedb --in '/home/biolinux/.cache/ViruLink/VOGDB/vogdb_merged.faa' --db '/home/biolinux/.cache/ViruLink/VOGDB/VOGDB'' completed successfully
+2025-05-08 09:37:03,849 - INFO - Created database /home/biolinux/.cache/ViruLink/VOGDB/VOGDB from /home/biolinux/.cache/ViruLink/VOGDB/vogdb_merged.faa
+2025-05-08 09:37:03,849 - INFO - Running command: diamond blastx --fast --db '/home/biolinux/.cache/ViruLink/VOGDB/VOGDB' --threads 48 --query '/home/biolinux/Downloads/ena_i_presume.fasta' --out 'tmp/network.m8' --outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore
+2025-05-08 09:37:03,856 - INFO - diamond v2.1.11.165 (C) Max Planck Society for the Advancement of Science, Benjamin Buchfink, University of Tuebingen
+2025-05-08 09:37:03,856 - INFO - Documentation, support and updates available at http://www.diamondsearch.org
+2025-05-08 09:37:03,856 - INFO - Please cite: http://dx.doi.org/10.1038/s41592-021-01101-x Nature Methods (2021)
+2025-05-08 09:37:03,856 - INFO - 
+2025-05-08 09:37:03,856 - INFO - #CPU threads: 48
+2025-05-08 09:37:03,856 - INFO - Scoring parameters: (Matrix=BLOSUM62 Lambda=0.267 K=0.041 Penalties=11/1)
+2025-05-08 09:37:03,859 - INFO - Temporary directory: tmp
+2025-05-08 09:37:03,859 - INFO - #Target sequences to report alignments for: 25
+2025-05-08 09:37:03,883 - INFO - Opening the database...  [0.023s]
+2025-05-08 09:37:03,883 - INFO - Database: /home/biolinux/.cache/ViruLink/VOGDB/VOGDB (type: Diamond database, sequences: 60257, letters: 12854521)
+2025-05-08 09:37:03,883 - INFO - Block size = 2000000000
+2025-05-08 09:37:03,884 - INFO - Opening the input file...  [0s]
+2025-05-08 09:37:03,884 - INFO - Opening the output file...  [0s]
+2025-05-08 09:37:03,885 - INFO - Loading query sequences...  [0.001s]
+2025-05-08 09:37:03,895 - INFO - Masking queries...  [0.01s]
+2025-05-08 09:37:03,895 - INFO - Algorithm: Double-indexed
+2025-05-08 09:37:03,899 - INFO - Building query histograms...  [0.003s]
+2025-05-08 09:37:03,899 - INFO - Seeking in database...  [0s]
+2025-05-08 09:37:03,937 - INFO - Loading reference sequences...  [0.037s]
+2025-05-08 09:37:03,992 - INFO - Masking reference...  [0.054s]
+2025-05-08 09:37:03,992 - INFO - Initializing temporary storage...  [0s]
+2025-05-08 09:37:04,025 - INFO - Building reference histograms...  [0.032s]
+2025-05-08 09:37:04,025 - INFO - Allocating buffers...  [0s]
+2025-05-08 09:37:04,025 - INFO - Processing query block 1, reference block 1/1, shape 1/1, index chunk 1/4.
+2025-05-08 09:37:04,049 - INFO - Building reference seed array...  [0.023s]
+2025-05-08 09:37:04,053 - INFO - Building query seed array...  [0.003s]
+2025-05-08 09:37:04,057 - INFO - Computing hash join...  [0.004s]
+2025-05-08 09:37:04,059 - INFO - Masking low complexity seeds...  [0.001s]
+2025-05-08 09:37:04,073 - INFO - Searching alignments...  [0.013s]
+2025-05-08 09:37:04,073 - INFO - Deallocating memory...  [0s]
+2025-05-08 09:37:04,073 - INFO - Processing query block 1, reference block 1/1, shape 1/1, index chunk 2/4.
+2025-05-08 09:37:04,100 - INFO - Building reference seed array...  [0.027s]
+2025-05-08 09:37:04,105 - INFO - Building query seed array...  [0.004s]
+2025-05-08 09:37:04,110 - INFO - Computing hash join...  [0.004s]
+2025-05-08 09:37:04,112 - INFO - Masking low complexity seeds...  [0.002s]
+2025-05-08 09:37:04,119 - INFO - Searching alignments...  [0.006s]
+2025-05-08 09:37:04,119 - INFO - Deallocating memory...  [0s]
+2025-05-08 09:37:04,120 - INFO - Processing query block 1, reference block 1/1, shape 1/1, index chunk 3/4.
+2025-05-08 09:37:04,147 - INFO - Building reference seed array...  [0.027s]
+2025-05-08 09:37:04,153 - INFO - Building query seed array...  [0.005s]
+2025-05-08 09:37:04,157 - INFO - Computing hash join...  [0.004s]
+2025-05-08 09:37:04,159 - INFO - Masking low complexity seeds...  [0.002s]
+2025-05-08 09:37:04,162 - INFO - Searching alignments...  [0.002s]
+2025-05-08 09:37:04,163 - INFO - Deallocating memory...  [0s]
+2025-05-08 09:37:04,163 - INFO - Processing query block 1, reference block 1/1, shape 1/1, index chunk 4/4.
+2025-05-08 09:37:04,192 - INFO - Building reference seed array...  [0.029s]
+2025-05-08 09:37:04,196 - INFO - Building query seed array...  [0.004s]
+2025-05-08 09:37:04,201 - INFO - Computing hash join...  [0.004s]
+2025-05-08 09:37:04,203 - INFO - Masking low complexity seeds...  [0.002s]
+2025-05-08 09:37:04,207 - INFO - Searching alignments...  [0.002s]
+2025-05-08 09:37:04,208 - INFO - Deallocating memory...  [0s]
+2025-05-08 09:37:04,209 - INFO - Deallocating buffers...  [0.002s]
+2025-05-08 09:37:04,209 - INFO - Clearing query masking...  [0s]
+2025-05-08 09:37:04,248 - INFO - Computing alignments...  [0.038s]
+2025-05-08 09:37:04,249 - INFO - Deallocating reference...  [0s]
+2025-05-08 09:37:04,249 - INFO - Loading reference sequences...  [0s]
+2025-05-08 09:37:04,249 - INFO - Deallocating buffers...  [0s]
+2025-05-08 09:37:04,249 - INFO - Deallocating queries...  [0s]
+2025-05-08 09:37:04,249 - INFO - Loading query sequences...  [0s]
+2025-05-08 09:37:04,249 - INFO - Closing the input file...  [0s]
+2025-05-08 09:37:04,249 - INFO - Closing the output file...  [0s]
+2025-05-08 09:37:04,250 - INFO - Closing the database...  [0.001s]
+2025-05-08 09:37:04,250 - INFO - Cleaning up...  [0s]
+2025-05-08 09:37:04,250 - INFO - Total time = 0.391s
+2025-05-08 09:37:04,250 - INFO - Reported 16 pairwise alignments, 16 HSPs.
+2025-05-08 09:37:04,250 - INFO - 1 queries aligned.
+2025-05-08 09:37:04,254 - INFO - Command 'diamond blastx --fast --db '/home/biolinux/.cache/ViruLink/VOGDB/VOGDB' --threads 48 --query '/home/biolinux/Downloads/ena_i_presume.fasta' --out 'tmp/network.m8' --outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore' completed successfully
+2025-05-08 09:37:09,476 - INFO - ======================================================================
+2025-05-08 09:37:09,477 - INFO - ================ ADDING QUERY SEQUENCES TO ANI GRAPH =================
+2025-05-08 09:37:09,477 - INFO - ======================================================================
+2025-05-08 09:37:09,479 - INFO - Running command: skani sketch -i '/home/biolinux/Downloads/ena_i_presume.fasta' -o 'tmp/ANI_sketch' --medium -t 48
+2025-05-08 09:37:09,485 - INFO - [00:00:00.000] (7f3acb772800) INFO   skani sketch -i /home/biolinux/Downloads/ena_i_presume.fasta -o tmp/ANI_sketch --medium -t 48
+2025-05-08 09:37:09,485 - INFO - [00:00:00.000] (7f3acb772800) INFO   Sketching files...
+2025-05-08 09:37:09,486 - INFO - [00:00:00.001] (7f3acb772800) INFO   Sketching time: 0.001168286
+2025-05-08 09:37:09,488 - INFO - Command 'skani sketch -i '/home/biolinux/Downloads/ena_i_presume.fasta' -o 'tmp/ANI_sketch' --medium -t 48' completed successfully
+2025-05-08 09:37:09,489 - INFO - Running command: skani dist --rl 'tmp/ANI_sketch/sketches.txt' --ql '/home/biolinux/.cache/ViruLink/Caudoviricetes/ANI_sketch/sketches.txt' -o 'tmp/query_db_ANI.tsv' -t 48 --medium
+2025-05-08 09:37:09,497 - INFO - [00:00:00.002] (7f5dc531b800) INFO   skani dist --rl tmp/ANI_sketch/sketches.txt --ql /home/biolinux/.cache/ViruLink/Caudoviricetes/ANI_sketch/sketches.txt -o tmp/query_db_ANI.tsv -t 48 --medium
+2025-05-08 09:37:09,498 - INFO - [00:00:00.002] (7f5dc531b800) INFO   Sketches detected.
+2025-05-08 09:37:09,713 - INFO - [00:00:00.218] (7f5dc531b800) INFO   Learned ANI mode detected. ANI may be adjusted according to a regression model trained on MAGs.
+2025-05-08 09:37:09,713 - INFO - [00:00:00.218] (7f5dc531b800) INFO   Full index option detected; generating marker hash table
+2025-05-08 09:37:09,714 - INFO - [00:00:00.218] (7f5dc531b800) INFO   Full indexing time: 0.000047882
+2025-05-08 09:37:09,714 - INFO - [00:00:00.218] (7f5dc531b800) INFO   Generating sketch time: 0.21568206
+2025-05-08 09:37:09,714 - INFO - [00:00:00.219] (7f5da55ea700) INFO   100 query sequences processed.
+2025-05-08 09:37:09,715 - INFO - [00:00:00.219] (7f5da43e1700) INFO   200 query sequences processed.
+2025-05-08 09:37:09,715 - INFO - [00:00:00.219] (7f5da4de6700) INFO   300 query sequences processed.
+2025-05-08 09:37:09,715 - INFO - [00:00:00.219] (7f5da69f4700) INFO   400 query sequences processed.
+2025-05-08 09:37:09,715 - INFO - [00:00:00.219] (7f5da71f8700) INFO   500 query sequences processed.
+2025-05-08 09:37:09,715 - INFO - [00:00:00.219] (7f5da71f8700) INFO   600 query sequences processed.
+2025-05-08 09:37:09,716 - INFO - [00:00:00.219] (7f5da67f3700) INFO   700 query sequences processed.
+2025-05-08 09:37:09,716 - INFO - [00:00:00.219] (7f5dc4d17700) INFO   800 query sequences processed.
+2025-05-08 09:37:09,716 - INFO - [00:00:00.219] (7f5dc4d17700) INFO   900 query sequences processed.
+2025-05-08 09:37:09,716 - INFO - [00:00:00.219] (7f5da7dfe700) INFO   1000 query sequences processed.
+2025-05-08 09:37:09,716 - INFO - [00:00:00.219] (7f5da47e3700) INFO   1100 query sequences processed.
+2025-05-08 09:37:09,717 - INFO - [00:00:00.219] (7f5d233f9700) INFO   1200 query sequences processed.
+2025-05-08 09:37:09,717 - INFO - [00:00:00.220] (7f5da4be5700) INFO   1300 query sequences processed.
+2025-05-08 09:37:09,717 - INFO - [00:00:00.220] (7f5da79fc700) INFO   1400 query sequences processed.
+2025-05-08 09:37:09,717 - INFO - [00:00:00.220] (7f5da67f3700) INFO   1500 query sequences processed.
+2025-05-08 09:37:09,717 - INFO - [00:00:00.220] (7f5da59ec700) INFO   1600 query sequences processed.
+2025-05-08 09:37:09,717 - INFO - [00:00:00.220] (7f5da77fb700) INFO   1700 query sequences processed.
+2025-05-08 09:37:09,718 - INFO - [00:00:00.220] (7f5da49e4700) INFO   1900 query sequences processed.
+2025-05-08 09:37:09,718 - INFO - [00:00:00.220] (7f5da57eb700) INFO   2000 query sequences processed.
+2025-05-08 09:37:09,718 - INFO - [00:00:00.220] (7f5da4de6700) INFO   2100 query sequences processed.
+2025-05-08 09:37:09,718 - INFO - [00:00:00.220] (7f5da57eb700) INFO   2200 query sequences processed.
+2025-05-08 09:37:09,718 - INFO - [00:00:00.220] (7f5d233f9700) INFO   2300 query sequences processed.
+2025-05-08 09:37:09,718 - INFO - [00:00:00.220] (7f5da71f8700) INFO   2400 query sequences processed.
+2025-05-08 09:37:09,718 - INFO - [00:00:00.220] (7f5d23dfe700) INFO   2500 query sequences processed.
+2025-05-08 09:37:09,718 - INFO - [00:00:00.221] (7f5da4fe7700) INFO   2600 query sequences processed.
+2025-05-08 09:37:09,719 - INFO - [00:00:00.221] (7f5da5bed700) INFO   2700 query sequences processed.
+2025-05-08 09:37:09,719 - INFO - [00:00:00.221] (7f5da43e1700) INFO   2800 query sequences processed.
+2025-05-08 09:37:09,719 - INFO - [00:00:00.221] (7f5dc4b16700) INFO   2900 query sequences processed.
+2025-05-08 09:37:09,719 - INFO - [00:00:00.221] (7f5da4de6700) INFO   3000 query sequences processed.
+2025-05-08 09:37:09,719 - INFO - [00:00:00.221] (7f5da7bfd700) INFO   3100 query sequences processed.
+2025-05-08 09:37:09,719 - INFO - [00:00:00.221] (7f5da49e4700) INFO   3200 query sequences processed.
+2025-05-08 09:37:09,719 - INFO - [00:00:00.221] (7f5dc5119700) INFO   3300 query sequences processed.
+2025-05-08 09:37:09,719 - INFO - [00:00:00.221] (7f5dc4513700) INFO   3400 query sequences processed.
+2025-05-08 09:37:09,719 - INFO - [00:00:00.221] (7f5d23fff700) INFO   1800 query sequences processed.
+2025-05-08 09:37:09,719 - INFO - [00:00:00.221] (7f5da7dfe700) INFO   3600 query sequences processed.
+2025-05-08 09:37:09,720 - INFO - [00:00:00.221] (7f5dc4915700) INFO   3500 query sequences processed.
+2025-05-08 09:37:09,720 - INFO - [00:00:00.221] (7f5da5fef700) INFO   3700 query sequences processed.
+2025-05-08 09:37:09,720 - INFO - [00:00:00.222] (7f5d23bfd700) INFO   3800 query sequences processed.
+2025-05-08 09:37:09,720 - INFO - [00:00:00.222] (7f5da6df6700) INFO   3900 query sequences processed.
+2025-05-08 09:37:09,720 - INFO - [00:00:00.222] (7f5dc5119700) INFO   4100 query sequences processed.
+2025-05-08 09:37:09,720 - INFO - [00:00:00.222] (7f5d235fa700) INFO   4000 query sequences processed.
+2025-05-08 09:37:09,720 - INFO - [00:00:00.222] (7f5d231f8700) INFO   4200 query sequences processed.
+2025-05-08 09:37:09,720 - INFO - [00:00:00.222] (7f5dc4312700) INFO   4300 query sequences processed.
+2025-05-08 09:37:09,720 - INFO - [00:00:00.222] (7f5d231f8700) INFO   4400 query sequences processed.
+2025-05-08 09:37:09,720 - INFO - [00:00:00.222] (7f5da71f8700) INFO   4500 query sequences processed.
+2025-05-08 09:37:09,720 - INFO - [00:00:00.222] (7f5da59ec700) INFO   4600 query sequences processed.
+2025-05-08 09:37:09,720 - INFO - [00:00:00.222] (7f5d239fc700) INFO   4800 query sequences processed.
+2025-05-08 09:37:09,720 - INFO - [00:00:00.222] (7f5da43e1700) INFO   4700 query sequences processed.
+2025-05-08 09:37:09,721 - INFO - [00:00:00.222] (7f5da4de6700) INFO   4900 query sequences processed.
+2025-05-08 09:37:09,721 - INFO - [00:00:00.222] (7f5da6bf5700) INFO   5100 query sequences processed.
+2025-05-08 09:37:09,721 - INFO - [00:00:00.223] (7f5da6ff7700) INFO   5000 query sequences processed.
+2025-05-08 09:37:09,721 - INFO - [00:00:00.223] (7f5da6ff7700) INFO   Writing results for 5000 query sequences.
+2025-05-08 09:37:09,721 - INFO - [00:00:00.224] (7f5dc531b800) INFO   ANI calculation time: 0.005579408
+2025-05-08 09:37:09,815 - INFO - Command 'skani dist --rl 'tmp/ANI_sketch/sketches.txt' --ql '/home/biolinux/.cache/ViruLink/Caudoviricetes/ANI_sketch/sketches.txt' -o 'tmp/query_db_ANI.tsv' -t 48 --medium' completed successfully
+2025-05-08 09:37:09,830 - INFO - Running command: skani dist --rl 'tmp/ANI_sketch/sketches.txt' --ql 'tmp/ANI_sketch/sketches.txt' -o 'tmp/self_ANI.tsv' -t 48 --medium
+2025-05-08 09:37:09,837 - INFO - [00:00:00.000] (7f33e28f0800) INFO   skani dist --rl tmp/ANI_sketch/sketches.txt --ql tmp/ANI_sketch/sketches.txt -o tmp/self_ANI.tsv -t 48 --medium
+2025-05-08 09:37:09,837 - INFO - [00:00:00.000] (7f33e28f0800) INFO   Sketches detected.
+2025-05-08 09:37:09,841 - INFO - [00:00:00.003] (7f33e28f0800) INFO   Learned ANI mode detected. ANI may be adjusted according to a regression model trained on MAGs.
+2025-05-08 09:37:09,841 - INFO - [00:00:00.003] (7f33e28f0800) INFO   Generating sketch time: 0.003738859
+2025-05-08 09:37:09,842 - INFO - [00:00:00.005] (7f33e28f0800) INFO   ANI calculation time: 0.001062308
+2025-05-08 09:37:09,844 - INFO - Command 'skani dist --rl 'tmp/ANI_sketch/sketches.txt' --ql 'tmp/ANI_sketch/sketches.txt' -o 'tmp/self_ANI.tsv' -t 48 --medium' completed successfully
+2025-05-08 09:37:09,852 - INFO - ======================================================================
+2025-05-08 09:37:09,853 - INFO - ======================== COMPLETING ANI GRAPH ========================
+2025-05-08 09:37:09,853 - INFO - ======================================================================
+2025-05-08 09:37:09,928 - INFO - ======================================================================
+2025-05-08 09:37:09,928 - INFO - ========================== RUNNING NODE2VEC ==========================
+2025-05-08 09:37:09,928 - INFO - ======================================================================
+2025-05-08 09:37:15,948 - INFO - collecting all words and their counts
+2025-05-08 09:37:15,948 - INFO - PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
+2025-05-08 09:37:15,992 - INFO - PROGRESS: at sentence #10000, processed 210000 words, keeping 1952 word types
+2025-05-08 09:37:16,033 - INFO - PROGRESS: at sentence #20000, processed 420000 words, keeping 2310 word types
+2025-05-08 09:37:16,074 - INFO - PROGRESS: at sentence #30000, processed 630000 words, keeping 2730 word types
+2025-05-08 09:37:16,114 - INFO - PROGRESS: at sentence #40000, processed 840000 words, keeping 3038 word types
+2025-05-08 09:37:16,155 - INFO - PROGRESS: at sentence #50000, processed 1050000 words, keeping 3254 word types
+2025-05-08 09:37:16,200 - INFO - PROGRESS: at sentence #60000, processed 1260000 words, keeping 3428 word types
+2025-05-08 09:37:16,243 - INFO - PROGRESS: at sentence #70000, processed 1470000 words, keeping 3543 word types
+2025-05-08 09:37:16,285 - INFO - PROGRESS: at sentence #80000, processed 1680000 words, keeping 3607 word types
+2025-05-08 09:37:16,328 - INFO - PROGRESS: at sentence #90000, processed 1890000 words, keeping 3678 word types
+2025-05-08 09:37:16,370 - INFO - PROGRESS: at sentence #100000, processed 2100000 words, keeping 3730 word types
+2025-05-08 09:37:16,416 - INFO - PROGRESS: at sentence #110000, processed 2310000 words, keeping 3792 word types
+2025-05-08 09:37:16,459 - INFO - PROGRESS: at sentence #120000, processed 2520000 words, keeping 3843 word types
+2025-05-08 09:37:16,502 - INFO - PROGRESS: at sentence #130000, processed 2730000 words, keeping 3896 word types
+2025-05-08 09:37:16,545 - INFO - PROGRESS: at sentence #140000, processed 2940000 words, keeping 3932 word types
+2025-05-08 09:37:16,593 - INFO - PROGRESS: at sentence #150000, processed 3150000 words, keeping 3977 word types
+2025-05-08 09:37:16,637 - INFO - PROGRESS: at sentence #160000, processed 3360000 words, keeping 4009 word types
+2025-05-08 09:37:16,679 - INFO - PROGRESS: at sentence #170000, processed 3570000 words, keeping 4050 word types
+2025-05-08 09:37:16,722 - INFO - PROGRESS: at sentence #180000, processed 3780000 words, keeping 4081 word types
+2025-05-08 09:37:16,765 - INFO - PROGRESS: at sentence #190000, processed 3990000 words, keeping 4104 word types
+2025-05-08 09:37:16,807 - INFO - PROGRESS: at sentence #200000, processed 4200000 words, keeping 4140 word types
+2025-05-08 09:37:16,850 - INFO - PROGRESS: at sentence #210000, processed 4410000 words, keeping 4153 word types
+2025-05-08 09:37:16,893 - INFO - PROGRESS: at sentence #220000, processed 4620000 words, keeping 4168 word types
+2025-05-08 09:37:16,939 - INFO - PROGRESS: at sentence #230000, processed 4830000 words, keeping 4173 word types
+2025-05-08 09:37:16,981 - INFO - PROGRESS: at sentence #240000, processed 5040000 words, keeping 4199 word types
+2025-05-08 09:37:17,024 - INFO - PROGRESS: at sentence #250000, processed 5250000 words, keeping 4205 word types
+2025-05-08 09:37:17,067 - INFO - PROGRESS: at sentence #260000, processed 5460000 words, keeping 4229 word types
+2025-05-08 09:37:17,110 - INFO - PROGRESS: at sentence #270000, processed 5670000 words, keeping 4231 word types
+2025-05-08 09:37:17,153 - INFO - PROGRESS: at sentence #280000, processed 5880000 words, keeping 4246 word types
+2025-05-08 09:37:17,196 - INFO - PROGRESS: at sentence #290000, processed 6090000 words, keeping 4264 word types
+2025-05-08 09:37:17,238 - INFO - PROGRESS: at sentence #300000, processed 6300000 words, keeping 4273 word types
+2025-05-08 09:37:17,282 - INFO - PROGRESS: at sentence #310000, processed 6510000 words, keeping 4277 word types
+2025-05-08 09:37:17,324 - INFO - PROGRESS: at sentence #320000, processed 6720000 words, keeping 4284 word types
+2025-05-08 09:37:17,371 - INFO - PROGRESS: at sentence #330000, processed 6930000 words, keeping 4288 word types
+2025-05-08 09:37:17,413 - INFO - PROGRESS: at sentence #340000, processed 7140000 words, keeping 4294 word types
+2025-05-08 09:37:17,456 - INFO - PROGRESS: at sentence #350000, processed 7350000 words, keeping 4298 word types
+2025-05-08 09:37:17,499 - INFO - PROGRESS: at sentence #360000, processed 7560000 words, keeping 4302 word types
+2025-05-08 09:37:17,542 - INFO - PROGRESS: at sentence #370000, processed 7770000 words, keeping 4314 word types
+2025-05-08 09:37:17,585 - INFO - PROGRESS: at sentence #380000, processed 7980000 words, keeping 4316 word types
+2025-05-08 09:37:17,628 - INFO - PROGRESS: at sentence #390000, processed 8190000 words, keeping 4316 word types
+2025-05-08 09:37:17,671 - INFO - PROGRESS: at sentence #400000, processed 8400000 words, keeping 4316 word types
+2025-05-08 09:37:17,714 - INFO - PROGRESS: at sentence #410000, processed 8610000 words, keeping 4316 word types
+2025-05-08 09:37:17,760 - INFO - PROGRESS: at sentence #420000, processed 8820000 words, keeping 4316 word types
+2025-05-08 09:37:17,803 - INFO - PROGRESS: at sentence #430000, processed 9030000 words, keeping 4316 word types
+2025-05-08 09:37:17,810 - INFO - collected 4316 word types from a corpus of 9063600 raw words and 431600 sentences
+2025-05-08 09:37:17,810 - INFO - Creating a fresh vocabulary
+2025-05-08 09:37:17,825 - INFO - Word2Vec lifecycle event {'msg': 'effective_min_count=0 retains 4316 unique words (100.00% of original 4316, drops 0)', 'datetime': '2025-05-08T09:37:17.823378', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'prepare_vocab'}
+2025-05-08 09:37:17,826 - INFO - Word2Vec lifecycle event {'msg': 'effective_min_count=0 leaves 9063600 word corpus (100.00% of original 9063600, drops 0)', 'datetime': '2025-05-08T09:37:17.826083', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'prepare_vocab'}
+2025-05-08 09:37:17,851 - INFO - deleting the raw counts dictionary of 4316 items
+2025-05-08 09:37:17,852 - INFO - sample=0.001 downsamples 0 most-common words
+2025-05-08 09:37:17,852 - INFO - Word2Vec lifecycle event {'msg': 'downsampling leaves estimated 9063600 word corpus (100.0%% of prior 9063600)', 'datetime': '2025-05-08T09:37:17.852174', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'prepare_vocab'}
+2025-05-08 09:37:17,896 - INFO - estimated required memory for 4316 words and 64 dimensions: 4367792 bytes
+2025-05-08 09:37:17,896 - INFO - resetting layer weights
+2025-05-08 09:37:17,899 - INFO - Word2Vec lifecycle event {'update': False, 'trim_rule': 'None', 'datetime': '2025-05-08T09:37:17.899159', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'build_vocab'}
+2025-05-08 09:37:17,899 - INFO - Word2Vec lifecycle event {'msg': 'training model with 48 workers on 4316 vocabulary and 64 features, using sg=1 hs=0 sample=0.001 negative=5 window=5 shrink_windows=True', 'datetime': '2025-05-08T09:37:17.899366', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'train'}
+2025-05-08 09:37:18,927 - INFO - EPOCH 0 - PROGRESS: at 13.34% examples, 1208608 words/s, in_qsize 96, out_qsize 0
+2025-05-08 09:37:19,932 - INFO - EPOCH 0 - PROGRESS: at 30.77% examples, 1390357 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:37:20,934 - INFO - EPOCH 0 - PROGRESS: at 48.09% examples, 1448804 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:37:21,955 - INFO - EPOCH 0 - PROGRESS: at 65.62% examples, 1476247 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:37:22,972 - INFO - EPOCH 0 - PROGRESS: at 83.16% examples, 1493704 words/s, in_qsize 96, out_qsize 1
+2025-05-08 09:37:23,789 - INFO - EPOCH 0: training on 9063600 raw words (9063600 effective words) took 5.9s, 1545989 effective words/s
+2025-05-08 09:37:25,650 - INFO - EPOCH 1 - PROGRESS: at 15.00% examples, 1345065 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:37:26,660 - INFO - EPOCH 1 - PROGRESS: at 32.76% examples, 1469562 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:37:27,662 - INFO - EPOCH 1 - PROGRESS: at 51.50% examples, 1544500 words/s, in_qsize 94, out_qsize 2
+2025-05-08 09:37:28,670 - INFO - EPOCH 1 - PROGRESS: at 69.15% examples, 1555219 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:37:29,681 - INFO - EPOCH 1 - PROGRESS: at 86.69% examples, 1558576 words/s, in_qsize 96, out_qsize 1
+2025-05-08 09:37:30,312 - INFO - EPOCH 1: training on 9063600 raw words (9063600 effective words) took 5.7s, 1597926 effective words/s
+2025-05-08 09:37:31,341 - INFO - EPOCH 2 - PROGRESS: at 14.89% examples, 1337675 words/s, in_qsize 96, out_qsize 0
+2025-05-08 09:37:32,341 - INFO - EPOCH 2 - PROGRESS: at 31.43% examples, 1417776 words/s, in_qsize 96, out_qsize 0
+2025-05-08 09:37:33,346 - INFO - EPOCH 2 - PROGRESS: at 49.30% examples, 1482193 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:37:34,347 - INFO - EPOCH 2 - PROGRESS: at 66.61% examples, 1503545 words/s, in_qsize 96, out_qsize 0
+2025-05-08 09:37:35,348 - INFO - EPOCH 2 - PROGRESS: at 84.81% examples, 1532343 words/s, in_qsize 96, out_qsize 0
+2025-05-08 09:37:36,072 - INFO - EPOCH 2: training on 9063600 raw words (9063600 effective words) took 5.7s, 1578922 effective words/s
+2025-05-08 09:37:37,096 - INFO - EPOCH 3 - PROGRESS: at 15.33% examples, 1386408 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:37:38,106 - INFO - EPOCH 3 - PROGRESS: at 33.53% examples, 1509642 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:37:39,111 - INFO - EPOCH 3 - PROGRESS: at 52.28% examples, 1570189 words/s, in_qsize 93, out_qsize 2
+2025-05-08 09:37:40,117 - INFO - EPOCH 3 - PROGRESS: at 70.03% examples, 1577610 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:37:41,118 - INFO - EPOCH 3 - PROGRESS: at 86.91% examples, 1567763 words/s, in_qsize 96, out_qsize 0
+2025-05-08 09:37:41,727 - INFO - EPOCH 3: training on 9063600 raw words (9063600 effective words) took 5.6s, 1608799 effective words/s
+2025-05-08 09:37:42,767 - INFO - EPOCH 4 - PROGRESS: at 14.01% examples, 1248439 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:37:43,773 - INFO - EPOCH 4 - PROGRESS: at 32.09% examples, 1437848 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:37:44,787 - INFO - EPOCH 4 - PROGRESS: at 50.07% examples, 1494204 words/s, in_qsize 96, out_qsize 0
+2025-05-08 09:37:45,790 - INFO - EPOCH 4 - PROGRESS: at 67.83% examples, 1521685 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:37:46,792 - INFO - EPOCH 4 - PROGRESS: at 86.02% examples, 1546306 words/s, in_qsize 95, out_qsize 1
+2025-05-08 09:37:47,423 - INFO - EPOCH 4: training on 9063600 raw words (9063600 effective words) took 5.7s, 1597844 effective words/s
+2025-05-08 09:37:47,423 - INFO - Word2Vec lifecycle event {'msg': 'training on 45318000 raw words (45318000 effective words) took 29.5s, 1534955 effective words/s', 'datetime': '2025-05-08T09:37:47.423552', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'train'}
+2025-05-08 09:37:47,423 - INFO - Word2Vec lifecycle event {'params': 'Word2Vec<vocab=4316, vector_size=64, alpha=0.025>', 'datetime': '2025-05-08T09:37:47.423871', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'created'}
+2025-05-08 09:37:53,973 - INFO - collecting all words and their counts
+2025-05-08 09:37:53,974 - INFO - PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
+2025-05-08 09:37:54,011 - INFO - PROGRESS: at sentence #10000, processed 210000 words, keeping 4876 word types
+2025-05-08 09:37:54,048 - INFO - PROGRESS: at sentence #20000, processed 420000 words, keeping 4954 word types
+2025-05-08 09:37:54,085 - INFO - PROGRESS: at sentence #30000, processed 630000 words, keeping 5035 word types
+2025-05-08 09:37:54,123 - INFO - PROGRESS: at sentence #40000, processed 840000 words, keeping 5053 word types
+2025-05-08 09:37:54,165 - INFO - PROGRESS: at sentence #50000, processed 1050000 words, keeping 5067 word types
+2025-05-08 09:37:54,208 - INFO - PROGRESS: at sentence #60000, processed 1260000 words, keeping 5078 word types
+2025-05-08 09:37:54,251 - INFO - PROGRESS: at sentence #70000, processed 1470000 words, keeping 5086 word types
+2025-05-08 09:37:54,294 - INFO - PROGRESS: at sentence #80000, processed 1680000 words, keeping 5093 word types
+2025-05-08 09:37:54,338 - INFO - PROGRESS: at sentence #90000, processed 1890000 words, keeping 5096 word types
+2025-05-08 09:37:54,381 - INFO - PROGRESS: at sentence #100000, processed 2100000 words, keeping 5096 word types
+2025-05-08 09:37:54,425 - INFO - PROGRESS: at sentence #110000, processed 2310000 words, keeping 5104 word types
+2025-05-08 09:37:54,469 - INFO - PROGRESS: at sentence #120000, processed 2520000 words, keeping 5106 word types
+2025-05-08 09:37:54,513 - INFO - PROGRESS: at sentence #130000, processed 2730000 words, keeping 5106 word types
+2025-05-08 09:37:54,556 - INFO - PROGRESS: at sentence #140000, processed 2940000 words, keeping 5106 word types
+2025-05-08 09:37:54,599 - INFO - PROGRESS: at sentence #150000, processed 3150000 words, keeping 5106 word types
+2025-05-08 09:37:54,643 - INFO - PROGRESS: at sentence #160000, processed 3360000 words, keeping 5108 word types
+2025-05-08 09:37:54,686 - INFO - PROGRESS: at sentence #170000, processed 3570000 words, keeping 5108 word types
+2025-05-08 09:37:54,730 - INFO - PROGRESS: at sentence #180000, processed 3780000 words, keeping 5110 word types
+2025-05-08 09:37:54,773 - INFO - PROGRESS: at sentence #190000, processed 3990000 words, keeping 5110 word types
+2025-05-08 09:37:54,816 - INFO - PROGRESS: at sentence #200000, processed 4200000 words, keeping 5110 word types
+2025-05-08 09:37:54,859 - INFO - PROGRESS: at sentence #210000, processed 4410000 words, keeping 5110 word types
+2025-05-08 09:37:54,902 - INFO - PROGRESS: at sentence #220000, processed 4620000 words, keeping 5110 word types
+2025-05-08 09:37:54,946 - INFO - PROGRESS: at sentence #230000, processed 4830000 words, keeping 5115 word types
+2025-05-08 09:37:54,989 - INFO - PROGRESS: at sentence #240000, processed 5040000 words, keeping 5120 word types
+2025-05-08 09:37:55,032 - INFO - PROGRESS: at sentence #250000, processed 5250000 words, keeping 5120 word types
+2025-05-08 09:37:55,075 - INFO - PROGRESS: at sentence #260000, processed 5460000 words, keeping 5122 word types
+2025-05-08 09:37:55,118 - INFO - PROGRESS: at sentence #270000, processed 5670000 words, keeping 5122 word types
+2025-05-08 09:37:55,162 - INFO - PROGRESS: at sentence #280000, processed 5880000 words, keeping 5122 word types
+2025-05-08 09:37:55,205 - INFO - PROGRESS: at sentence #290000, processed 6090000 words, keeping 5122 word types
+2025-05-08 09:37:55,248 - INFO - PROGRESS: at sentence #300000, processed 6300000 words, keeping 5122 word types
+2025-05-08 09:37:55,291 - INFO - PROGRESS: at sentence #310000, processed 6510000 words, keeping 5122 word types
+2025-05-08 09:37:55,334 - INFO - PROGRESS: at sentence #320000, processed 6720000 words, keeping 5122 word types
+2025-05-08 09:37:55,377 - INFO - PROGRESS: at sentence #330000, processed 6930000 words, keeping 5122 word types
+2025-05-08 09:37:55,420 - INFO - PROGRESS: at sentence #340000, processed 7140000 words, keeping 5122 word types
+2025-05-08 09:37:55,463 - INFO - PROGRESS: at sentence #350000, processed 7350000 words, keeping 5122 word types
+2025-05-08 09:37:55,507 - INFO - PROGRESS: at sentence #360000, processed 7560000 words, keeping 5122 word types
+2025-05-08 09:37:55,550 - INFO - PROGRESS: at sentence #370000, processed 7770000 words, keeping 5124 word types
+2025-05-08 09:37:55,593 - INFO - PROGRESS: at sentence #380000, processed 7980000 words, keeping 5124 word types
+2025-05-08 09:37:55,636 - INFO - PROGRESS: at sentence #390000, processed 8190000 words, keeping 5124 word types
+2025-05-08 09:37:55,679 - INFO - PROGRESS: at sentence #400000, processed 8400000 words, keeping 5126 word types
+2025-05-08 09:37:55,723 - INFO - PROGRESS: at sentence #410000, processed 8610000 words, keeping 5126 word types
+2025-05-08 09:37:55,766 - INFO - PROGRESS: at sentence #420000, processed 8820000 words, keeping 5126 word types
+2025-05-08 09:37:55,810 - INFO - PROGRESS: at sentence #430000, processed 9030000 words, keeping 5126 word types
+2025-05-08 09:37:55,853 - INFO - PROGRESS: at sentence #440000, processed 9240000 words, keeping 5126 word types
+2025-05-08 09:37:55,896 - INFO - PROGRESS: at sentence #450000, processed 9450000 words, keeping 5126 word types
+2025-05-08 09:37:55,940 - INFO - PROGRESS: at sentence #460000, processed 9660000 words, keeping 5126 word types
+2025-05-08 09:37:55,983 - INFO - PROGRESS: at sentence #470000, processed 9870000 words, keeping 5126 word types
+2025-05-08 09:37:56,027 - INFO - PROGRESS: at sentence #480000, processed 10080000 words, keeping 5126 word types
+2025-05-08 09:37:56,070 - INFO - PROGRESS: at sentence #490000, processed 10290000 words, keeping 5126 word types
+2025-05-08 09:37:56,113 - INFO - PROGRESS: at sentence #500000, processed 10500000 words, keeping 5126 word types
+2025-05-08 09:37:56,156 - INFO - PROGRESS: at sentence #510000, processed 10710000 words, keeping 5126 word types
+2025-05-08 09:37:56,167 - INFO - collected 5126 word types from a corpus of 10764600 raw words and 512600 sentences
+2025-05-08 09:37:56,167 - INFO - Creating a fresh vocabulary
+2025-05-08 09:37:56,182 - INFO - Word2Vec lifecycle event {'msg': 'effective_min_count=0 retains 5126 unique words (100.00% of original 5126, drops 0)', 'datetime': '2025-05-08T09:37:56.182143', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'prepare_vocab'}
+2025-05-08 09:37:56,182 - INFO - Word2Vec lifecycle event {'msg': 'effective_min_count=0 leaves 10764600 word corpus (100.00% of original 10764600, drops 0)', 'datetime': '2025-05-08T09:37:56.182327', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'prepare_vocab'}
+2025-05-08 09:37:56,212 - INFO - deleting the raw counts dictionary of 5126 items
+2025-05-08 09:37:56,212 - INFO - sample=0.001 downsamples 0 most-common words
+2025-05-08 09:37:56,213 - INFO - Word2Vec lifecycle event {'msg': 'downsampling leaves estimated 10764600 word corpus (100.0%% of prior 10764600)', 'datetime': '2025-05-08T09:37:56.212986', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'prepare_vocab'}
+2025-05-08 09:37:56,264 - INFO - estimated required memory for 5126 words and 64 dimensions: 5187512 bytes
+2025-05-08 09:37:56,264 - INFO - resetting layer weights
+2025-05-08 09:37:56,267 - INFO - Word2Vec lifecycle event {'update': False, 'trim_rule': 'None', 'datetime': '2025-05-08T09:37:56.267048', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'build_vocab'}
+2025-05-08 09:37:56,267 - INFO - Word2Vec lifecycle event {'msg': 'training model with 48 workers on 5126 vocabulary and 64 features, using sg=1 hs=0 sample=0.001 negative=5 window=5 shrink_windows=True', 'datetime': '2025-05-08T09:37:56.267205', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'train'}
+2025-05-08 09:37:57,290 - INFO - EPOCH 0 - PROGRESS: at 10.86% examples, 1168003 words/s, in_qsize 96, out_qsize 0
+2025-05-08 09:37:58,302 - INFO - EPOCH 0 - PROGRESS: at 25.63% examples, 1370323 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:37:59,305 - INFO - EPOCH 0 - PROGRESS: at 39.65% examples, 1414960 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:38:00,324 - INFO - EPOCH 0 - PROGRESS: at 53.12% examples, 1417020 words/s, in_qsize 96, out_qsize 0
+2025-05-08 09:38:01,325 - INFO - EPOCH 0 - PROGRESS: at 67.04% examples, 1433081 words/s, in_qsize 94, out_qsize 2
+2025-05-08 09:38:02,353 - INFO - EPOCH 0 - PROGRESS: at 80.32% examples, 1425835 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:38:03,353 - INFO - EPOCH 0 - PROGRESS: at 94.25% examples, 1436159 words/s, in_qsize 62, out_qsize 0
+2025-05-08 09:38:03,675 - INFO - EPOCH 0: training on 10764600 raw words (10764600 effective words) took 7.4s, 1457250 effective words/s
+2025-05-08 09:38:04,700 - INFO - EPOCH 1 - PROGRESS: at 10.59% examples, 1134739 words/s, in_qsize 96, out_qsize 0
+2025-05-08 09:38:05,704 - INFO - EPOCH 1 - PROGRESS: at 24.61% examples, 1319274 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:38:06,715 - INFO - EPOCH 1 - PROGRESS: at 38.35% examples, 1367140 words/s, in_qsize 94, out_qsize 1
+2025-05-08 09:38:07,724 - INFO - EPOCH 1 - PROGRESS: at 51.91% examples, 1387114 words/s, in_qsize 94, out_qsize 1
+2025-05-08 09:38:08,730 - INFO - EPOCH 1 - PROGRESS: at 66.12% examples, 1413660 words/s, in_qsize 96, out_qsize 0
+2025-05-08 09:38:09,742 - INFO - EPOCH 1 - PROGRESS: at 79.77% examples, 1420211 words/s, in_qsize 93, out_qsize 2
+2025-05-08 09:38:10,749 - INFO - EPOCH 1 - PROGRESS: at 93.51% examples, 1427109 words/s, in_qsize 69, out_qsize 1
+2025-05-08 09:38:11,108 - INFO - EPOCH 1: training on 10764600 raw words (10764600 effective words) took 7.4s, 1452303 effective words/s
+2025-05-08 09:38:12,145 - INFO - EPOCH 2 - PROGRESS: at 10.40% examples, 1105790 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:38:13,150 - INFO - EPOCH 2 - PROGRESS: at 24.89% examples, 1327851 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:38:14,172 - INFO - EPOCH 2 - PROGRESS: at 38.63% examples, 1367971 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:38:15,196 - INFO - EPOCH 2 - PROGRESS: at 53.12% examples, 1407005 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:38:16,207 - INFO - EPOCH 2 - PROGRESS: at 66.77% examples, 1416137 words/s, in_qsize 96, out_qsize 0
+2025-05-08 09:38:17,225 - INFO - EPOCH 2 - PROGRESS: at 80.88% examples, 1429020 words/s, in_qsize 96, out_qsize 0
+2025-05-08 09:38:18,245 - INFO - EPOCH 2 - PROGRESS: at 95.18% examples, 1440448 words/s, in_qsize 52, out_qsize 0
+2025-05-08 09:38:18,506 - INFO - EPOCH 2: training on 10764600 raw words (10764600 effective words) took 7.4s, 1459938 effective words/s
+2025-05-08 09:38:19,537 - INFO - EPOCH 3 - PROGRESS: at 10.86% examples, 1158700 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:38:20,565 - INFO - EPOCH 3 - PROGRESS: at 24.89% examples, 1314832 words/s, in_qsize 96, out_qsize 2
+2025-05-08 09:38:21,567 - INFO - EPOCH 3 - PROGRESS: at 38.35% examples, 1358255 words/s, in_qsize 96, out_qsize 0
+2025-05-08 09:38:22,575 - INFO - EPOCH 3 - PROGRESS: at 51.63% examples, 1373258 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:38:23,577 - INFO - EPOCH 3 - PROGRESS: at 66.02% examples, 1407636 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:38:24,585 - INFO - EPOCH 3 - PROGRESS: at 78.93% examples, 1402821 words/s, in_qsize 94, out_qsize 1
+2025-05-08 09:38:25,588 - INFO - EPOCH 3 - PROGRESS: at 93.14% examples, 1420099 words/s, in_qsize 74, out_qsize 0
+2025-05-08 09:38:25,963 - INFO - EPOCH 3: training on 10764600 raw words (10764600 effective words) took 7.4s, 1447768 effective words/s
+2025-05-08 09:38:26,997 - INFO - EPOCH 4 - PROGRESS: at 11.33% examples, 1202693 words/s, in_qsize 96, out_qsize 0
+2025-05-08 09:38:27,997 - INFO - EPOCH 4 - PROGRESS: at 25.54% examples, 1364689 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:38:29,003 - INFO - EPOCH 4 - PROGRESS: at 38.72% examples, 1380317 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:38:30,007 - INFO - EPOCH 4 - PROGRESS: at 52.37% examples, 1401176 words/s, in_qsize 94, out_qsize 1
+2025-05-08 09:38:31,016 - INFO - EPOCH 4 - PROGRESS: at 66.95% examples, 1432134 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:38:32,018 - INFO - EPOCH 4 - PROGRESS: at 80.70% examples, 1439374 words/s, in_qsize 95, out_qsize 0
+2025-05-08 09:38:33,026 - INFO - EPOCH 4 - PROGRESS: at 95.55% examples, 1460535 words/s, in_qsize 48, out_qsize 0
+2025-05-08 09:38:33,252 - INFO - EPOCH 4: training on 10764600 raw words (10764600 effective words) took 7.3s, 1480972 effective words/s
+2025-05-08 09:38:33,252 - INFO - Word2Vec lifecycle event {'msg': 'training on 53823000 raw words (53823000 effective words) took 37.0s, 1455248 effective words/s', 'datetime': '2025-05-08T09:38:33.252841', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'train'}
+2025-05-08 09:38:33,253 - INFO - Word2Vec lifecycle event {'params': 'Word2Vec<vocab=5126, vector_size=64, alpha=0.025>', 'datetime': '2025-05-08T09:38:33.253131', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'created'}
+2025-05-08 09:38:36,579 - INFO - Using device: cpu
+2025-05-08 09:38:36,580 - INFO - Using 48 threads
+2025-05-08 09:39:00,803 - INFO - ======================================================================
+2025-05-08 09:39:00,804 - INFO - =================== TRAINING ORDTRI EDGE PREDICTOR ===================
+2025-05-08 09:39:00,804 - INFO - ======================================================================
+2025-05-08 09:39:09,324 - INFO - Ep01  train L=0.850 hit=0.579 acc=0.383   val L=0.466 hit=0.775 acc=0.656
+2025-05-08 09:39:17,568 - INFO - Ep02  train L=0.358 hit=0.848 acc=0.776   val L=0.205 hit=0.898 acc=0.824
+2025-05-08 09:39:25,824 - INFO - Ep03  train L=0.152 hit=0.937 acc=0.890   val L=0.110 hit=0.945 acc=0.901
+2025-05-08 09:39:34,056 - INFO - Ep04  train L=0.092 hit=0.961 acc=0.929   val L=0.084 hit=0.955 acc=0.916
+2025-05-08 09:39:42,266 - INFO - Ep05  train L=0.069 hit=0.970 acc=0.944   val L=0.074 hit=0.959 acc=0.923
+2025-05-08 09:39:50,591 - INFO - Ep06  train L=0.056 hit=0.976 acc=0.955   val L=0.069 hit=0.960 acc=0.923
+2025-05-08 09:39:58,921 - INFO - Ep07  train L=0.048 hit=0.978 acc=0.959   val L=0.062 hit=0.964 acc=0.931
+2025-05-08 09:40:07,307 - INFO - Ep08  train L=0.042 hit=0.982 acc=0.964   val L=0.061 hit=0.965 acc=0.933
+2025-05-08 09:40:15,717 - INFO - Ep09  train L=0.038 hit=0.983 acc=0.967   val L=0.062 hit=0.967 acc=0.936
+2025-05-08 09:40:24,198 - INFO - Ep10  train L=0.034 hit=0.984 acc=0.969   val L=0.060 hit=0.968 acc=0.936
+2025-05-08 09:40:25,548 - INFO - ======================================================================
+2025-05-08 09:40:25,548 - INFO - ======= VALIDATION CONFUSION MATRIX  (POINT-LABEL EDGES ONLY) ========
+2025-05-08 09:40:25,548 - INFO - ======================================================================
+2025-05-08 09:40:26,696 - INFO - ======================================================================
+2025-05-08 09:40:26,697 - INFO - ======================= CLASSIFICATION RESULTS =======================
+2025-05-08 09:40:26,697 - INFO - ======================================================================
+2025-05-08 09:40:27,200 - INFO - Deleting temporary files in tmp

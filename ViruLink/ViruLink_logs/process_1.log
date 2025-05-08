@@ -1,0 +1,493 @@
+2025-05-08 08:32:36,566 - INFO - Time: 08:32:36 - Running get_paths_dict with inputs: get_paths_dict(databases_loc='/home/biolinux/.cache/ViruLink', classes_df=DataFrame(3 rows x 5 columns))
+2025-05-08 08:32:36,566 - INFO - Checking for Caudoviricetes unprocessed data.
+2025-05-08 08:32:36,566 - INFO - Found Caudoviricetes unprocessed data at /home/biolinux/.cache/ViruLink/Caudoviricetes
+2025-05-08 08:32:36,566 - INFO - Checking for Herviviricetes unprocessed data.
+2025-05-08 08:32:36,566 - INFO - Found Herviviricetes unprocessed data at /home/biolinux/.cache/ViruLink/Herviviricetes
+2025-05-08 08:32:36,566 - INFO - Checking for Monjiviricetes unprocessed data.
+2025-05-08 08:32:36,566 - INFO - Found Monjiviricetes unprocessed data at /home/biolinux/.cache/ViruLink/Monjiviricetes
+2025-05-08 08:32:36,566 - INFO - Found VOGDB unprocessed data at /home/biolinux/.cache/ViruLink/VOGDB
+2025-05-08 08:32:36,566 - INFO - Time: 08:32:36 - get_paths_dict Completed
+2025-05-08 08:32:36,567 - INFO - Total time taken: 0.00 seconds
+2025-05-08 08:32:36,567 - INFO - ======================================================================
+2025-05-08 08:32:36,567 - INFO - =========================== PREPPING VOGDB ===========================
+2025-05-08 08:32:36,567 - INFO - ======================================================================
+2025-05-08 08:32:36,568 - INFO - Running command: diamond makedb --in '/home/biolinux/.cache/ViruLink/VOGDB/vogdb_merged.faa' --db '/home/biolinux/.cache/ViruLink/VOGDB/VOGDB'
+2025-05-08 08:32:36,572 - INFO - diamond v2.1.11.165 (C) Max Planck Society for the Advancement of Science, Benjamin Buchfink, University of Tuebingen
+2025-05-08 08:32:36,572 - INFO - Documentation, support and updates available at http://www.diamondsearch.org
+2025-05-08 08:32:36,572 - INFO - Please cite: http://dx.doi.org/10.1038/s41592-021-01101-x Nature Methods (2021)
+2025-05-08 08:32:36,572 - INFO - 
+2025-05-08 08:32:36,572 - INFO - #CPU threads: 48
+2025-05-08 08:32:36,572 - INFO - Scoring parameters: (Matrix=BLOSUM62 Lambda=0.267 K=0.041 Penalties=11/1)
+2025-05-08 08:32:36,574 - INFO - Database input file: /home/biolinux/.cache/ViruLink/VOGDB/vogdb_merged.faa
+2025-05-08 08:32:36,579 - INFO - Opening the database file...  [0.004s]
+2025-05-08 08:32:36,745 - INFO - Loading sequences...  [0.166s]
+2025-05-08 08:32:36,798 - INFO - Masking sequences...  [0.053s]
+2025-05-08 08:32:36,816 - INFO - Writing sequences...  [0.017s]
+2025-05-08 08:32:36,823 - INFO - Hashing sequences...  [0.006s]
+2025-05-08 08:32:36,823 - INFO - Loading sequences...  [0s]
+2025-05-08 08:32:36,823 - INFO - Writing trailer...  [0s]
+2025-05-08 08:32:36,824 - INFO - Closing the input file...  [0s]
+2025-05-08 08:32:36,825 - INFO - Closing the database file...  [0.001s]
+2025-05-08 08:32:36,825 - INFO - 
+2025-05-08 08:32:36,826 - INFO - Database sequences  60257
+2025-05-08 08:32:36,826 - INFO -   Database letters  12854521
+2025-05-08 08:32:36,826 - INFO -      Database hash  6c50d057679f9534599d6728e332e246
+2025-05-08 08:32:36,826 - INFO -         Total time  0.250000s
+2025-05-08 08:32:36,829 - INFO - Command 'diamond makedb --in '/home/biolinux/.cache/ViruLink/VOGDB/vogdb_merged.faa' --db '/home/biolinux/.cache/ViruLink/VOGDB/VOGDB'' completed successfully
+2025-05-08 08:32:36,829 - INFO - Created database /home/biolinux/.cache/ViruLink/VOGDB/VOGDB from /home/biolinux/.cache/ViruLink/VOGDB/vogdb_merged.faa
+2025-05-08 08:32:36,830 - INFO - ======================================================================
+2025-05-08 08:32:36,830 - INFO - =============== RUNNING VOGDB VS CAUDOVIRICETES BLAST ================
+2025-05-08 08:32:36,830 - INFO - ======================================================================
+2025-05-08 08:32:36,830 - INFO - Running command: diamond blastx --fast --db '/home/biolinux/.cache/ViruLink/VOGDB/VOGDB' --threads 48 --query '/home/biolinux/.cache/ViruLink/Caudoviricetes/Caudoviricetes.fasta' --out '/home/biolinux/.cache/ViruLink/Caudoviricetes/network.m8' --outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore
+2025-05-08 08:32:36,834 - INFO - diamond v2.1.11.165 (C) Max Planck Society for the Advancement of Science, Benjamin Buchfink, University of Tuebingen
+2025-05-08 08:32:36,834 - INFO - Documentation, support and updates available at http://www.diamondsearch.org
+2025-05-08 08:32:36,835 - INFO - Please cite: http://dx.doi.org/10.1038/s41592-021-01101-x Nature Methods (2021)
+2025-05-08 08:32:36,835 - INFO - 
+2025-05-08 08:32:36,835 - INFO - #CPU threads: 48
+2025-05-08 08:32:36,835 - INFO - Scoring parameters: (Matrix=BLOSUM62 Lambda=0.267 K=0.041 Penalties=11/1)
+2025-05-08 08:32:36,836 - INFO - Temporary directory: /home/biolinux/.cache/ViruLink/Caudoviricetes
+2025-05-08 08:32:36,836 - INFO - #Target sequences to report alignments for: 25
+2025-05-08 08:32:36,858 - INFO - Opening the database...  [0.021s]
+2025-05-08 08:32:36,859 - INFO - Database: /home/biolinux/.cache/ViruLink/VOGDB/VOGDB (type: Diamond database, sequences: 60257, letters: 12854521)
+2025-05-08 08:32:36,859 - INFO - Block size = 2000000000
+2025-05-08 08:32:36,914 - INFO - Opening the input file...  [0.055s]
+2025-05-08 08:32:36,914 - INFO - Opening the output file...  [0s]
+2025-05-08 08:32:44,618 - INFO - Loading query sequences...  [7.704s]
+2025-05-08 08:32:48,500 - INFO - Masking queries...  [3.882s]
+2025-05-08 08:32:48,501 - INFO - Algorithm: Double-indexed
+2025-05-08 08:32:49,425 - INFO - Building query histograms...  [0.923s]
+2025-05-08 08:32:49,425 - INFO - Seeking in database...  [0s]
+2025-05-08 08:32:49,469 - INFO - Loading reference sequences...  [0.044s]
+2025-05-08 08:32:49,522 - INFO - Masking reference...  [0.052s]
+2025-05-08 08:32:49,523 - INFO - Initializing temporary storage...  [0s]
+2025-05-08 08:32:49,562 - INFO - Building reference histograms...  [0.039s]
+2025-05-08 08:32:49,562 - INFO - Allocating buffers...  [0s]
+2025-05-08 08:32:49,562 - INFO - Processing query block 1, reference block 1/1, shape 1/1, index chunk 1/4.
+2025-05-08 08:32:49,604 - INFO - Building reference seed array...  [0.041s]
+2025-05-08 08:32:50,188 - INFO - Building query seed array...  [0.583s]
+2025-05-08 08:32:50,337 - INFO - Computing hash join...  [0.149s]
+2025-05-08 08:32:50,348 - INFO - Masking low complexity seeds...  [0.011s]
+2025-05-08 08:32:50,579 - INFO - Searching alignments...  [0.23s]
+2025-05-08 08:32:50,579 - INFO - Deallocating memory...  [0s]
+2025-05-08 08:32:50,579 - INFO - Processing query block 1, reference block 1/1, shape 1/1, index chunk 2/4.
+2025-05-08 08:32:50,614 - INFO - Building reference seed array...  [0.035s]
+2025-05-08 08:32:51,222 - INFO - Building query seed array...  [0.607s]
+2025-05-08 08:32:51,355 - INFO - Computing hash join...  [0.132s]
+2025-05-08 08:32:51,368 - INFO - Masking low complexity seeds...  [0.012s]
+2025-05-08 08:32:51,548 - INFO - Searching alignments...  [0.179s]
+2025-05-08 08:32:51,548 - INFO - Deallocating memory...  [0s]
+2025-05-08 08:32:51,548 - INFO - Processing query block 1, reference block 1/1, shape 1/1, index chunk 3/4.
+2025-05-08 08:32:51,579 - INFO - Building reference seed array...  [0.031s]
+2025-05-08 08:32:52,177 - INFO - Building query seed array...  [0.598s]
+2025-05-08 08:32:52,311 - INFO - Computing hash join...  [0.133s]
+2025-05-08 08:32:52,323 - INFO - Masking low complexity seeds...  [0.012s]
+2025-05-08 08:32:52,430 - INFO - Searching alignments...  [0.106s]
+2025-05-08 08:32:52,430 - INFO - Deallocating memory...  [0s]
+2025-05-08 08:32:52,430 - INFO - Processing query block 1, reference block 1/1, shape 1/1, index chunk 4/4.
+2025-05-08 08:32:52,458 - INFO - Building reference seed array...  [0.027s]
+2025-05-08 08:32:52,992 - INFO - Building query seed array...  [0.534s]
+2025-05-08 08:32:53,113 - INFO - Computing hash join...  [0.12s]
+2025-05-08 08:32:53,125 - INFO - Masking low complexity seeds...  [0.012s]
+2025-05-08 08:32:53,271 - INFO - Searching alignments...  [0.146s]
+2025-05-08 08:32:53,271 - INFO - Deallocating memory...  [0s]
+2025-05-08 08:32:53,318 - INFO - Deallocating buffers...  [0.047s]
+2025-05-08 08:32:53,429 - INFO - Clearing query masking...  [0.11s]
+2025-05-08 08:33:40,140 - INFO - Computing alignments...  [46.71s]
+2025-05-08 08:33:40,140 - INFO - Deallocating reference...  [0s]
+2025-05-08 08:33:40,140 - INFO - Loading reference sequences...  [0s]
+2025-05-08 08:33:40,140 - INFO - Deallocating buffers...  [0s]
+2025-05-08 08:33:40,184 - INFO - Deallocating queries...  [0.044s]
+2025-05-08 08:33:40,185 - INFO - Loading query sequences...  [0s]
+2025-05-08 08:33:40,188 - INFO - Closing the input file...  [0.003s]
+2025-05-08 08:33:40,195 - INFO - Closing the output file...  [0.007s]
+2025-05-08 08:33:40,196 - INFO - Closing the database...  [0s]
+2025-05-08 08:33:40,196 - INFO - Cleaning up...  [0s]
+2025-05-08 08:33:40,196 - INFO - Total time = 63.36s
+2025-05-08 08:33:40,197 - INFO - Reported 124180 pairwise alignments, 124180 HSPs.
+2025-05-08 08:33:40,197 - INFO - 5132 queries aligned.
+2025-05-08 08:33:40,319 - INFO - Command 'diamond blastx --fast --db '/home/biolinux/.cache/ViruLink/VOGDB/VOGDB' --threads 48 --query '/home/biolinux/.cache/ViruLink/Caudoviricetes/Caudoviricetes.fasta' --out '/home/biolinux/.cache/ViruLink/Caudoviricetes/network.m8' --outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore' completed successfully
+2025-05-08 08:33:40,320 - INFO - ======================================================================
+2025-05-08 08:33:40,320 - INFO - =============== RUNNING VOGDB VS HERVIVIRICETES BLAST ================
+2025-05-08 08:33:40,320 - INFO - ======================================================================
+2025-05-08 08:33:40,320 - INFO - Running command: diamond blastx --fast --db '/home/biolinux/.cache/ViruLink/VOGDB/VOGDB' --threads 48 --query '/home/biolinux/.cache/ViruLink/Herviviricetes/Herviviricetes.fasta' --out '/home/biolinux/.cache/ViruLink/Herviviricetes/network.m8' --outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore
+2025-05-08 08:33:40,326 - INFO - diamond v2.1.11.165 (C) Max Planck Society for the Advancement of Science, Benjamin Buchfink, University of Tuebingen
+2025-05-08 08:33:40,326 - INFO - Documentation, support and updates available at http://www.diamondsearch.org
+2025-05-08 08:33:40,326 - INFO - Please cite: http://dx.doi.org/10.1038/s41592-021-01101-x Nature Methods (2021)
+2025-05-08 08:33:40,326 - INFO - 
+2025-05-08 08:33:40,326 - INFO - #CPU threads: 48
+2025-05-08 08:33:40,326 - INFO - Scoring parameters: (Matrix=BLOSUM62 Lambda=0.267 K=0.041 Penalties=11/1)
+2025-05-08 08:33:40,329 - INFO - Temporary directory: /home/biolinux/.cache/ViruLink/Herviviricetes
+2025-05-08 08:33:40,329 - INFO - #Target sequences to report alignments for: 25
+2025-05-08 08:33:40,350 - INFO - Opening the database...  [0.02s]
+2025-05-08 08:33:40,350 - INFO - Database: /home/biolinux/.cache/ViruLink/VOGDB/VOGDB (type: Diamond database, sequences: 60257, letters: 12854521)
+2025-05-08 08:33:40,350 - INFO - Block size = 2000000000
+2025-05-08 08:33:40,399 - INFO - Opening the input file...  [0.048s]
+2025-05-08 08:33:40,399 - INFO - Opening the output file...  [0s]
+2025-05-08 08:33:46,476 - INFO - Loading query sequences...  [6.077s]
+2025-05-08 08:33:50,546 - INFO - Masking queries...  [4.069s]
+2025-05-08 08:33:50,546 - INFO - Algorithm: Double-indexed
+2025-05-08 08:33:51,429 - INFO - Building query histograms...  [0.882s]
+2025-05-08 08:33:51,429 - INFO - Seeking in database...  [0s]
+2025-05-08 08:33:51,471 - INFO - Loading reference sequences...  [0.042s]
+2025-05-08 08:33:51,536 - INFO - Masking reference...  [0.064s]
+2025-05-08 08:33:51,536 - INFO - Initializing temporary storage...  [0s]
+2025-05-08 08:33:51,578 - INFO - Building reference histograms...  [0.041s]
+2025-05-08 08:33:51,578 - INFO - Allocating buffers...  [0s]
+2025-05-08 08:33:51,579 - INFO - Processing query block 1, reference block 1/1, shape 1/1, index chunk 1/4.
+2025-05-08 08:33:51,611 - INFO - Building reference seed array...  [0.032s]
+2025-05-08 08:33:52,075 - INFO - Building query seed array...  [0.463s]
+2025-05-08 08:33:52,178 - INFO - Computing hash join...  [0.102s]
+2025-05-08 08:33:52,180 - INFO - Masking low complexity seeds...  [0.002s]
+2025-05-08 08:33:52,267 - INFO - Searching alignments...  [0.086s]
+2025-05-08 08:33:52,267 - INFO - Deallocating memory...  [0s]
+2025-05-08 08:33:52,267 - INFO - Processing query block 1, reference block 1/1, shape 1/1, index chunk 2/4.
+2025-05-08 08:33:52,299 - INFO - Building reference seed array...  [0.031s]
+2025-05-08 08:33:52,739 - INFO - Building query seed array...  [0.439s]
+2025-05-08 08:33:52,842 - INFO - Computing hash join...  [0.103s]
+2025-05-08 08:33:52,844 - INFO - Masking low complexity seeds...  [0.002s]
+2025-05-08 08:33:52,908 - INFO - Searching alignments...  [0.063s]
+2025-05-08 08:33:52,908 - INFO - Deallocating memory...  [0s]
+2025-05-08 08:33:52,908 - INFO - Processing query block 1, reference block 1/1, shape 1/1, index chunk 3/4.
+2025-05-08 08:33:52,938 - INFO - Building reference seed array...  [0.03s]
+2025-05-08 08:33:53,342 - INFO - Building query seed array...  [0.403s]
+2025-05-08 08:33:53,443 - INFO - Computing hash join...  [0.1s]
+2025-05-08 08:33:53,445 - INFO - Masking low complexity seeds...  [0.002s]
+2025-05-08 08:33:53,503 - INFO - Searching alignments...  [0.057s]
+2025-05-08 08:33:53,503 - INFO - Deallocating memory...  [0s]
+2025-05-08 08:33:53,503 - INFO - Processing query block 1, reference block 1/1, shape 1/1, index chunk 4/4.
+2025-05-08 08:33:53,531 - INFO - Building reference seed array...  [0.027s]
+2025-05-08 08:33:53,907 - INFO - Building query seed array...  [0.375s]
+2025-05-08 08:33:54,009 - INFO - Computing hash join...  [0.102s]
+2025-05-08 08:33:54,012 - INFO - Masking low complexity seeds...  [0.002s]
+2025-05-08 08:33:54,067 - INFO - Searching alignments...  [0.055s]
+2025-05-08 08:33:54,068 - INFO - Deallocating memory...  [0s]
+2025-05-08 08:33:54,117 - INFO - Deallocating buffers...  [0.049s]
+2025-05-08 08:33:54,229 - INFO - Clearing query masking...  [0.112s]
+2025-05-08 08:34:49,086 - INFO - Computing alignments...  [54.856s]
+2025-05-08 08:34:49,086 - INFO - Deallocating reference...  [0s]
+2025-05-08 08:34:49,086 - INFO - Loading reference sequences...  [0s]
+2025-05-08 08:34:49,086 - INFO - Deallocating buffers...  [0s]
+2025-05-08 08:34:49,127 - INFO - Deallocating queries...  [0.04s]
+2025-05-08 08:34:49,127 - INFO - Loading query sequences...  [0s]
+2025-05-08 08:34:49,131 - INFO - Closing the input file...  [0.003s]
+2025-05-08 08:34:49,133 - INFO - Closing the output file...  [0.002s]
+2025-05-08 08:34:49,134 - INFO - Closing the database...  [0s]
+2025-05-08 08:34:49,135 - INFO - Cleaning up...  [0s]
+2025-05-08 08:34:49,135 - INFO - Total time = 68.805s
+2025-05-08 08:34:49,135 - INFO - Reported 40757 pairwise alignments, 40757 HSPs.
+2025-05-08 08:34:49,135 - INFO - 1660 queries aligned.
+2025-05-08 08:34:49,273 - INFO - Command 'diamond blastx --fast --db '/home/biolinux/.cache/ViruLink/VOGDB/VOGDB' --threads 48 --query '/home/biolinux/.cache/ViruLink/Herviviricetes/Herviviricetes.fasta' --out '/home/biolinux/.cache/ViruLink/Herviviricetes/network.m8' --outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore' completed successfully
+2025-05-08 08:34:49,273 - INFO - ======================================================================
+2025-05-08 08:34:49,273 - INFO - =============== RUNNING VOGDB VS MONJIVIRICETES BLAST ================
+2025-05-08 08:34:49,273 - INFO - ======================================================================
+2025-05-08 08:34:49,274 - INFO - Running command: diamond blastx --fast --db '/home/biolinux/.cache/ViruLink/VOGDB/VOGDB' --threads 48 --query '/home/biolinux/.cache/ViruLink/Monjiviricetes/Monjiviricetes.fasta' --out '/home/biolinux/.cache/ViruLink/Monjiviricetes/network.m8' --outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore
+2025-05-08 08:34:49,279 - INFO - diamond v2.1.11.165 (C) Max Planck Society for the Advancement of Science, Benjamin Buchfink, University of Tuebingen
+2025-05-08 08:34:49,280 - INFO - Documentation, support and updates available at http://www.diamondsearch.org
+2025-05-08 08:34:49,280 - INFO - Please cite: http://dx.doi.org/10.1038/s41592-021-01101-x Nature Methods (2021)
+2025-05-08 08:34:49,280 - INFO - 
+2025-05-08 08:34:49,280 - INFO - #CPU threads: 48
+2025-05-08 08:34:49,280 - INFO - Scoring parameters: (Matrix=BLOSUM62 Lambda=0.267 K=0.041 Penalties=11/1)
+2025-05-08 08:34:49,283 - INFO - Temporary directory: /home/biolinux/.cache/ViruLink/Monjiviricetes
+2025-05-08 08:34:49,283 - INFO - #Target sequences to report alignments for: 25
+2025-05-08 08:34:49,304 - INFO - Opening the database...  [0.021s]
+2025-05-08 08:34:49,304 - INFO - Database: /home/biolinux/.cache/ViruLink/VOGDB/VOGDB (type: Diamond database, sequences: 60257, letters: 12854521)
+2025-05-08 08:34:49,304 - INFO - Block size = 2000000000
+2025-05-08 08:34:49,323 - INFO - Opening the input file...  [0.018s]
+2025-05-08 08:34:49,323 - INFO - Opening the output file...  [0s]
+2025-05-08 08:34:49,826 - INFO - Loading query sequences...  [0.502s]
+2025-05-08 08:34:50,039 - INFO - Masking queries...  [0.213s]
+2025-05-08 08:34:50,039 - INFO - Algorithm: Double-indexed
+2025-05-08 08:34:50,120 - INFO - Building query histograms...  [0.081s]
+2025-05-08 08:34:50,120 - INFO - Seeking in database...  [0s]
+2025-05-08 08:34:50,153 - INFO - Loading reference sequences...  [0.032s]
+2025-05-08 08:34:50,238 - INFO - Masking reference...  [0.084s]
+2025-05-08 08:34:50,239 - INFO - Initializing temporary storage...  [0s]
+2025-05-08 08:34:50,286 - INFO - Building reference histograms...  [0.047s]
+2025-05-08 08:34:50,286 - INFO - Allocating buffers...  [0s]
+2025-05-08 08:34:50,286 - INFO - Processing query block 1, reference block 1/1, shape 1/1, index chunk 1/4.
+2025-05-08 08:34:50,321 - INFO - Building reference seed array...  [0.035s]
+2025-05-08 08:34:50,416 - INFO - Building query seed array...  [0.093s]
+2025-05-08 08:34:50,431 - INFO - Computing hash join...  [0.015s]
+2025-05-08 08:34:50,433 - INFO - Masking low complexity seeds...  [0.001s]
+2025-05-08 08:34:50,443 - INFO - Searching alignments...  [0.009s]
+2025-05-08 08:34:50,443 - INFO - Deallocating memory...  [0s]
+2025-05-08 08:34:50,444 - INFO - Processing query block 1, reference block 1/1, shape 1/1, index chunk 2/4.
+2025-05-08 08:34:50,476 - INFO - Building reference seed array...  [0.032s]
+2025-05-08 08:34:50,543 - INFO - Building query seed array...  [0.066s]
+2025-05-08 08:34:50,552 - INFO - Computing hash join...  [0.008s]
+2025-05-08 08:34:50,554 - INFO - Masking low complexity seeds...  [0.001s]
+2025-05-08 08:34:50,562 - INFO - Searching alignments...  [0.007s]
+2025-05-08 08:34:50,562 - INFO - Deallocating memory...  [0s]
+2025-05-08 08:34:50,562 - INFO - Processing query block 1, reference block 1/1, shape 1/1, index chunk 3/4.
+2025-05-08 08:34:50,594 - INFO - Building reference seed array...  [0.031s]
+2025-05-08 08:34:50,671 - INFO - Building query seed array...  [0.076s]
+2025-05-08 08:34:50,678 - INFO - Computing hash join...  [0.006s]
+2025-05-08 08:34:50,679 - INFO - Masking low complexity seeds...  [0.001s]
+2025-05-08 08:34:50,686 - INFO - Searching alignments...  [0.006s]
+2025-05-08 08:34:50,686 - INFO - Deallocating memory...  [0s]
+2025-05-08 08:34:50,686 - INFO - Processing query block 1, reference block 1/1, shape 1/1, index chunk 4/4.
+2025-05-08 08:34:50,712 - INFO - Building reference seed array...  [0.025s]
+2025-05-08 08:34:50,792 - INFO - Building query seed array...  [0.08s]
+2025-05-08 08:34:50,800 - INFO - Computing hash join...  [0.008s]
+2025-05-08 08:34:50,802 - INFO - Masking low complexity seeds...  [0.002s]
+2025-05-08 08:34:50,808 - INFO - Searching alignments...  [0.005s]
+2025-05-08 08:34:50,808 - INFO - Deallocating memory...  [0s]
+2025-05-08 08:34:50,813 - INFO - Deallocating buffers...  [0.004s]
+2025-05-08 08:34:50,822 - INFO - Clearing query masking...  [0.009s]
+2025-05-08 08:34:51,652 - INFO - Computing alignments...  [0.829s]
+2025-05-08 08:34:51,652 - INFO - Deallocating reference...  [0s]
+2025-05-08 08:34:51,653 - INFO - Loading reference sequences...  [0s]
+2025-05-08 08:34:51,653 - INFO - Deallocating buffers...  [0s]
+2025-05-08 08:34:51,657 - INFO - Deallocating queries...  [0.004s]
+2025-05-08 08:34:51,657 - INFO - Loading query sequences...  [0s]
+2025-05-08 08:34:51,659 - INFO - Closing the input file...  [0.001s]
+2025-05-08 08:34:51,659 - INFO - Closing the output file...  [0s]
+2025-05-08 08:34:51,660 - INFO - Closing the database...  [0s]
+2025-05-08 08:34:51,660 - INFO - Cleaning up...  [0s]
+2025-05-08 08:34:51,660 - INFO - Total time = 2.377s
+2025-05-08 08:34:51,660 - INFO - Reported 5733 pairwise alignments, 5733 HSPs.
+2025-05-08 08:34:51,660 - INFO - 1268 queries aligned.
+2025-05-08 08:34:51,682 - INFO - Command 'diamond blastx --fast --db '/home/biolinux/.cache/ViruLink/VOGDB/VOGDB' --threads 48 --query '/home/biolinux/.cache/ViruLink/Monjiviricetes/Monjiviricetes.fasta' --out '/home/biolinux/.cache/ViruLink/Monjiviricetes/network.m8' --outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore' completed successfully
+2025-05-08 08:34:51,683 - INFO - ======================================================================
+2025-05-08 08:34:51,683 - INFO - =================== READING CAUDOVIRICETES M8 FILE ===================
+2025-05-08 08:34:51,683 - INFO - ======================================================================
+2025-05-08 08:34:52,210 - INFO - Edge list saved to /home/biolinux/.cache/ViruLink/Caudoviricetes/edge_list.txt
+2025-05-08 08:34:54,752 - INFO - ======================================================================
+2025-05-08 08:34:54,752 - INFO - ========= GENERATING GENE-SHARING NETWORK FOR CAUDOVIRICETES =========
+2025-05-08 08:34:54,752 - INFO - ======================================================================
+2025-05-08 08:34:56,617 - INFO - ======================================================================
+2025-05-08 08:34:56,617 - INFO - =================== READING HERVIVIRICETES M8 FILE ===================
+2025-05-08 08:34:56,618 - INFO - ======================================================================
+2025-05-08 08:34:56,773 - INFO - Edge list saved to /home/biolinux/.cache/ViruLink/Herviviricetes/edge_list.txt
+2025-05-08 08:34:56,838 - INFO - ======================================================================
+2025-05-08 08:34:56,838 - INFO - ========= GENERATING GENE-SHARING NETWORK FOR HERVIVIRICETES =========
+2025-05-08 08:34:56,838 - INFO - ======================================================================
+2025-05-08 08:34:57,726 - INFO - ======================================================================
+2025-05-08 08:34:57,726 - INFO - =================== READING MONJIVIRICETES M8 FILE ===================
+2025-05-08 08:34:57,726 - INFO - ======================================================================
+2025-05-08 08:34:57,766 - INFO - Edge list saved to /home/biolinux/.cache/ViruLink/Monjiviricetes/edge_list.txt
+2025-05-08 08:34:57,781 - INFO - ======================================================================
+2025-05-08 08:34:57,781 - INFO - ========= GENERATING GENE-SHARING NETWORK FOR MONJIVIRICETES =========
+2025-05-08 08:34:57,781 - INFO - ======================================================================
+2025-05-08 08:34:57,974 - INFO - ======================================================================
+2025-05-08 08:34:57,974 - INFO - ============== CREATING ANI NETWORK FOR CAUDOVIRICETES ===============
+2025-05-08 08:34:57,974 - INFO - ======================================================================
+2025-05-08 08:34:57,974 - INFO - Creating ANI sketches for Caudoviricetes in /home/biolinux/.cache/ViruLink/Caudoviricetes/ANI_sketch using --medium mode.
+2025-05-08 08:34:57,974 - INFO - Running command: skani sketch -i '/home/biolinux/.cache/ViruLink/Caudoviricetes/Caudoviricetes.fasta' -o '/home/biolinux/.cache/ViruLink/Caudoviricetes/ANI_sketch' --medium -t 48
+2025-05-08 08:34:57,980 - INFO - [00:00:00.000] (7f1e9d271800) INFO   skani sketch -i /home/biolinux/.cache/ViruLink/Caudoviricetes/Caudoviricetes.fasta -o /home/biolinux/.cache/ViruLink/Caudoviricetes/ANI_sketch --medium -t 48
+2025-05-08 08:34:57,980 - INFO - [00:00:00.000] (7f1e9d271800) INFO   Sketching files...
+2025-05-08 08:35:00,624 - INFO - [00:00:02.639] (7f1e777fb700) INFO   100 sequences sketched.
+2025-05-08 08:35:00,625 - INFO - [00:00:02.642] (7f1e775fa700) INFO   200 sequences sketched.
+2025-05-08 08:35:00,656 - INFO - [00:00:02.676] (7f1e7cde6700) INFO   300 sequences sketched.
+2025-05-08 08:35:00,667 - INFO - [00:00:02.679] (7f1e773f9700) INFO   400 sequences sketched.
+2025-05-08 08:35:00,667 - INFO - [00:00:02.682] (7f1e7c3e1700) INFO   500 sequences sketched.
+2025-05-08 08:35:00,667 - INFO - [00:00:02.684] (7f1e7d3e9700) INFO   600 sequences sketched.
+2025-05-08 08:35:00,667 - INFO - [00:00:02.686] (7f1e9c268700) INFO   700 sequences sketched.
+2025-05-08 08:35:00,670 - INFO - [00:00:02.689] (7f1e9ce6e700) INFO   800 sequences sketched.
+2025-05-08 08:35:00,672 - INFO - [00:00:02.692] (7f1e7edf6700) INFO   900 sequences sketched.
+2025-05-08 08:35:00,674 - INFO - [00:00:02.694] (7f1e7d9ec700) INFO   1000 sequences sketched.
+2025-05-08 08:35:00,678 - INFO - [00:00:02.696] (7f1e7cbe5700) INFO   1100 sequences sketched.
+2025-05-08 08:35:00,679 - INFO - [00:00:02.698] (7f1e7edf6700) INFO   1200 sequences sketched.
+2025-05-08 08:35:00,681 - INFO - [00:00:02.700] (7f1e7d9ec700) INFO   1300 sequences sketched.
+2025-05-08 08:35:00,683 - INFO - [00:00:02.703] (7f1e9d06f700) INFO   1400 sequences sketched.
+2025-05-08 08:35:00,685 - INFO - [00:00:02.704] (7f1e9cc6d700) INFO   1500 sequences sketched.
+2025-05-08 08:35:00,686 - INFO - [00:00:02.706] (7f1e7e3f1700) INFO   1600 sequences sketched.
+2025-05-08 08:35:00,689 - INFO - [00:00:02.708] (7f1e7e9f4700) INFO   1700 sequences sketched.
+2025-05-08 08:35:00,691 - INFO - [00:00:02.710] (7f1e7e7f3700) INFO   1800 sequences sketched.
+2025-05-08 08:35:00,693 - INFO - [00:00:02.713] (7f1e9cc6d700) INFO   1900 sequences sketched.
+2025-05-08 08:35:00,696 - INFO - [00:00:02.715] (7f1e9d270700) INFO   2000 sequences sketched.
+2025-05-08 08:35:00,699 - INFO - [00:00:02.718] (7f1e9c469700) INFO   2100 sequences sketched.
+2025-05-08 08:35:00,701 - INFO - [00:00:02.721] (7f1e7e1f0700) INFO   2200 sequences sketched.
+2025-05-08 08:35:00,704 - INFO - [00:00:02.723] (7f1e779fc700) INFO   2300 sequences sketched.
+2025-05-08 08:35:00,706 - INFO - [00:00:02.726] (7f1e7eff7700) INFO   2400 sequences sketched.
+2025-05-08 08:35:00,709 - INFO - [00:00:02.728] (7f1e7e5f2700) INFO   2500 sequences sketched.
+2025-05-08 08:35:00,711 - INFO - [00:00:02.730] (7f1e7d9ec700) INFO   2600 sequences sketched.
+2025-05-08 08:35:00,713 - INFO - [00:00:02.733] (7f1e7dbed700) INFO   2700 sequences sketched.
+2025-05-08 08:35:00,716 - INFO - [00:00:02.735] (7f1e7d5ea700) INFO   2800 sequences sketched.
+2025-05-08 08:35:00,719 - INFO - [00:00:02.737] (7f1e9c469700) INFO   2900 sequences sketched.
+2025-05-08 08:35:00,721 - INFO - [00:00:02.740] (7f1e7e9f4700) INFO   3000 sequences sketched.
+2025-05-08 08:35:00,726 - INFO - [00:00:02.742] (7f1e7d1e8700) INFO   3100 sequences sketched.
+2025-05-08 08:35:00,726 - INFO - [00:00:02.744] (7f1e9c86b700) INFO   3200 sequences sketched.
+2025-05-08 08:35:00,727 - INFO - [00:00:02.747] (7f1e7ddee700) INFO   3300 sequences sketched.
+2025-05-08 08:35:00,729 - INFO - [00:00:02.749] (7f1e7f3f9700) INFO   3400 sequences sketched.
+2025-05-08 08:35:00,733 - INFO - [00:00:02.751] (7f1e7ffff700) INFO   3500 sequences sketched.
+2025-05-08 08:35:00,734 - INFO - [00:00:02.754] (7f1e7c3e1700) INFO   3600 sequences sketched.
+2025-05-08 08:35:00,736 - INFO - [00:00:02.756] (7f1e7d5ea700) INFO   3700 sequences sketched.
+2025-05-08 08:35:00,739 - INFO - [00:00:02.758] (7f1e7edf6700) INFO   3800 sequences sketched.
+2025-05-08 08:35:00,741 - INFO - [00:00:02.760] (7f1e7edf6700) INFO   3900 sequences sketched.
+2025-05-08 08:35:00,743 - INFO - [00:00:02.762] (7f1e7c5e2700) INFO   4000 sequences sketched.
+2025-05-08 08:35:00,746 - INFO - [00:00:02.765] (7f1e9c268700) INFO   4100 sequences sketched.
+2025-05-08 08:35:00,748 - INFO - [00:00:02.767] (7f1e77fff700) INFO   4200 sequences sketched.
+2025-05-08 08:35:00,750 - INFO - [00:00:02.769] (7f1e7e1f0700) INFO   4300 sequences sketched.
+2025-05-08 08:35:00,752 - INFO - [00:00:02.771] (7f1e7eff7700) INFO   4400 sequences sketched.
+2025-05-08 08:35:00,756 - INFO - [00:00:02.776] (7f1e77dfe700) INFO   4500 sequences sketched.
+2025-05-08 08:35:00,758 - INFO - [00:00:02.778] (7f1e7f9fc700) INFO   4600 sequences sketched.
+2025-05-08 08:35:00,760 - INFO - [00:00:02.780] (7f1e9cc6d700) INFO   4700 sequences sketched.
+2025-05-08 08:35:00,763 - INFO - [00:00:02.782] (7f1e775fa700) INFO   4800 sequences sketched.
+2025-05-08 08:35:00,765 - INFO - [00:00:02.785] (7f1e77dfe700) INFO   4900 sequences sketched.
+2025-05-08 08:35:00,768 - INFO - [00:00:02.787] (7f1e7c5e2700) INFO   5000 sequences sketched.
+2025-05-08 08:35:00,770 - INFO - [00:00:02.789] (7f1e7e7f3700) INFO   5100 sequences sketched.
+2025-05-08 08:35:00,821 - INFO - [00:00:02.841] (7f1e9d271800) INFO   Sketching time: 2.8410466
+2025-05-08 08:35:00,844 - INFO - Command 'skani sketch -i '/home/biolinux/.cache/ViruLink/Caudoviricetes/Caudoviricetes.fasta' -o '/home/biolinux/.cache/ViruLink/Caudoviricetes/ANI_sketch' --medium -t 48' completed successfully
+2025-05-08 08:35:00,864 - INFO - Calculating ANI distances for Caudoviricetes using --medium mode.
+2025-05-08 08:35:00,864 - INFO - Running command: skani dist --rl '/home/biolinux/.cache/ViruLink/Caudoviricetes/ANI_sketch/sketches.txt' --ql '/home/biolinux/.cache/ViruLink/Caudoviricetes/ANI_sketch/sketches.txt' -o '/home/biolinux/.cache/ViruLink/Caudoviricetes/self_ANI.tsv' -t 48 --medium
+2025-05-08 08:35:00,875 - INFO - [00:00:00.005] (7fc5ddb0e800) INFO   skani dist --rl /home/biolinux/.cache/ViruLink/Caudoviricetes/ANI_sketch/sketches.txt --ql /home/biolinux/.cache/ViruLink/Caudoviricetes/ANI_sketch/sketches.txt -o /home/biolinux/.cache/ViruLink/Caudoviricetes/self_ANI.tsv -t 48 --medium
+2025-05-08 08:35:00,875 - INFO - [00:00:00.005] (7fc5ddb0e800) INFO   Sketches detected.
+2025-05-08 08:35:01,285 - INFO - [00:00:00.415] (7fc5ddb0e800) INFO   Learned ANI mode detected. ANI may be adjusted according to a regression model trained on MAGs.
+2025-05-08 08:35:01,285 - INFO - [00:00:00.415] (7fc5ddb0e800) INFO   Full index option detected; generating marker hash table
+2025-05-08 08:35:01,328 - INFO - [00:00:00.457] (7fc5ddb0e800) INFO   Full indexing time: 0.04256741
+2025-05-08 08:35:01,328 - INFO - [00:00:00.458] (7fc5ddb0e800) INFO   Generating sketch time: 0.45229983
+2025-05-08 08:35:01,353 - INFO - [00:00:00.483] (7fc5ab1f8700) INFO   100 query sequences processed.
+2025-05-08 08:35:01,375 - INFO - [00:00:00.504] (7fc5a85e2700) INFO   200 query sequences processed.
+2025-05-08 08:35:01,396 - INFO - [00:00:00.525] (7fc5ddb0d700) INFO   300 query sequences processed.
+2025-05-08 08:35:01,411 - INFO - [00:00:00.541] (7fc5a9dee700) INFO   400 query sequences processed.
+2025-05-08 08:35:01,434 - INFO - [00:00:00.563] (7fc5aa1f0700) INFO   500 query sequences processed.
+2025-05-08 08:35:01,459 - INFO - [00:00:00.588] (7fc5a8fe7700) INFO   600 query sequences processed.
+2025-05-08 08:35:01,478 - INFO - [00:00:00.608] (7fc58bbfd700) INFO   700 query sequences processed.
+2025-05-08 08:35:01,503 - INFO - [00:00:00.633] (7fc5a9bed700) INFO   800 query sequences processed.
+2025-05-08 08:35:01,523 - INFO - [00:00:00.653] (7fc5dd50a700) INFO   900 query sequences processed.
+2025-05-08 08:35:01,544 - INFO - [00:00:00.674] (7fc5a91e8700) INFO   1000 query sequences processed.
+2025-05-08 08:35:01,569 - INFO - [00:00:00.699] (7fc5a85e2700) INFO   1100 query sequences processed.
+2025-05-08 08:35:01,598 - INFO - [00:00:00.727] (7fc5aa9f4700) INFO   1200 query sequences processed.
+2025-05-08 08:35:01,626 - INFO - [00:00:00.756] (7fc5dc703700) INFO   1300 query sequences processed.
+2025-05-08 08:35:01,651 - INFO - [00:00:00.781] (7fc5dc301700) INFO   1400 query sequences processed.
+2025-05-08 08:35:01,680 - INFO - [00:00:00.810] (7fc5ddb0d700) INFO   1500 query sequences processed.
+2025-05-08 08:35:01,697 - INFO - [00:00:00.826] (7fc5abfff700) INFO   1600 query sequences processed.
+2025-05-08 08:35:01,721 - INFO - [00:00:00.850] (7fc5dc301700) INFO   1700 query sequences processed.
+2025-05-08 08:35:01,742 - INFO - [00:00:00.872] (7fc5a85e2700) INFO   1800 query sequences processed.
+2025-05-08 08:35:01,762 - INFO - [00:00:00.892] (7fc5dcf07700) INFO   1900 query sequences processed.
+2025-05-08 08:35:01,783 - INFO - [00:00:00.912] (7fc5a9fef700) INFO   2000 query sequences processed.
+2025-05-08 08:35:01,805 - INFO - [00:00:00.934] (7fc5dcb05700) INFO   2100 query sequences processed.
+2025-05-08 08:35:01,823 - INFO - [00:00:00.953] (7fc5aa7f3700) INFO   2200 query sequences processed.
+2025-05-08 08:35:01,851 - INFO - [00:00:00.981] (7fc5a91e8700) INFO   2300 query sequences processed.
+2025-05-08 08:35:01,881 - INFO - [00:00:01.011] (7fc5aabf5700) INFO   2400 query sequences processed.
+2025-05-08 08:35:01,910 - INFO - [00:00:01.039] (7fc5a8be5700) INFO   2500 query sequences processed.
+2025-05-08 08:35:01,939 - INFO - [00:00:01.068] (7fc5dc703700) INFO   2600 query sequences processed.
+2025-05-08 08:35:01,963 - INFO - [00:00:01.093] (7fc5dd70b700) INFO   2700 query sequences processed.
+2025-05-08 08:35:01,983 - INFO - [00:00:01.112] (7fc5ab5fa700) INFO   2800 query sequences processed.
+2025-05-08 08:35:02,009 - INFO - [00:00:01.139] (7fc5dd50a700) INFO   2900 query sequences processed.
+2025-05-08 08:35:02,038 - INFO - [00:00:01.167] (7fc5a8be5700) INFO   3000 query sequences processed.
+2025-05-08 08:35:02,067 - INFO - [00:00:01.197] (7fc5a8fe7700) INFO   3100 query sequences processed.
+2025-05-08 08:35:02,096 - INFO - [00:00:01.226] (7fc5abbfd700) INFO   3200 query sequences processed.
+2025-05-08 08:35:02,116 - INFO - [00:00:01.246] (7fc58bfff700) INFO   3300 query sequences processed.
+2025-05-08 08:35:02,139 - INFO - [00:00:01.269] (7fc5abdfe700) INFO   3400 query sequences processed.
+2025-05-08 08:35:02,162 - INFO - [00:00:01.291] (7fc5dc904700) INFO   3500 query sequences processed.
+2025-05-08 08:35:02,186 - INFO - [00:00:01.316] (7fc5dd50a700) INFO   3600 query sequences processed.
+2025-05-08 08:35:02,208 - INFO - [00:00:01.338] (7fc5dc703700) INFO   3700 query sequences processed.
+2025-05-08 08:35:02,234 - INFO - [00:00:01.363] (7fc58bfff700) INFO   3800 query sequences processed.
+2025-05-08 08:35:02,257 - INFO - [00:00:01.387] (7fc5a95ea700) INFO   3900 query sequences processed.
+2025-05-08 08:35:02,282 - INFO - [00:00:01.412] (7fc5dd50a700) INFO   4000 query sequences processed.
+2025-05-08 08:35:02,302 - INFO - [00:00:01.431] (7fc5dd70b700) INFO   4100 query sequences processed.
+2025-05-08 08:35:02,322 - INFO - [00:00:01.452] (7fc5dc703700) INFO   4200 query sequences processed.
+2025-05-08 08:35:02,353 - INFO - [00:00:01.483] (7fc5aa3f1700) INFO   4300 query sequences processed.
+2025-05-08 08:35:02,382 - INFO - [00:00:01.512] (7fc58bbfd700) INFO   4400 query sequences processed.
+2025-05-08 08:35:02,409 - INFO - [00:00:01.539] (7fc5ab3f9700) INFO   4500 query sequences processed.
+2025-05-08 08:35:02,436 - INFO - [00:00:01.566] (7fc5dcf07700) INFO   4600 query sequences processed.
+2025-05-08 08:35:02,463 - INFO - [00:00:01.592] (7fc58bbfd700) INFO   4700 query sequences processed.
+2025-05-08 08:35:02,492 - INFO - [00:00:01.622] (7fc5a8be5700) INFO   4800 query sequences processed.
+2025-05-08 08:35:02,523 - INFO - [00:00:01.653] (7fc5a8de6700) INFO   4900 query sequences processed.
+2025-05-08 08:35:02,554 - INFO - [00:00:01.683] (7fc5a99ec700) INFO   5000 query sequences processed.
+2025-05-08 08:35:02,554 - INFO - [00:00:01.684] (7fc5a99ec700) INFO   Writing results for 5000 query sequences.
+2025-05-08 08:35:02,583 - INFO - [00:00:01.713] (7fc5ddb0d700) INFO   5100 query sequences processed.
+2025-05-08 08:35:02,819 - INFO - [00:00:01.949] (7fc5ddb0e800) INFO   ANI calculation time: 1.4915802
+2025-05-08 08:35:02,980 - INFO - Command 'skani dist --rl '/home/biolinux/.cache/ViruLink/Caudoviricetes/ANI_sketch/sketches.txt' --ql '/home/biolinux/.cache/ViruLink/Caudoviricetes/ANI_sketch/sketches.txt' -o '/home/biolinux/.cache/ViruLink/Caudoviricetes/self_ANI.tsv' -t 48 --medium' completed successfully
+2025-05-08 08:35:03,671 - INFO - ======================================================================
+2025-05-08 08:35:03,672 - INFO - ============== CREATING ANI NETWORK FOR HERVIVIRICETES ===============
+2025-05-08 08:35:03,672 - INFO - ======================================================================
+2025-05-08 08:35:03,672 - INFO - Creating ANI sketches for Herviviricetes in /home/biolinux/.cache/ViruLink/Herviviricetes/ANI_sketch using --medium mode.
+2025-05-08 08:35:03,672 - INFO - Running command: skani sketch -i '/home/biolinux/.cache/ViruLink/Herviviricetes/Herviviricetes.fasta' -o '/home/biolinux/.cache/ViruLink/Herviviricetes/ANI_sketch' --medium -t 48
+2025-05-08 08:35:03,678 - INFO - [00:00:00.000] (7f0d1ec6d800) INFO   skani sketch -i /home/biolinux/.cache/ViruLink/Herviviricetes/Herviviricetes.fasta -o /home/biolinux/.cache/ViruLink/Herviviricetes/ANI_sketch --medium -t 48
+2025-05-08 08:35:03,678 - INFO - [00:00:00.000] (7f0d1ec6d800) INFO   Sketching files...
+2025-05-08 08:35:03,875 - INFO - [00:00:00.196] (7f0d1ec6d800) WARN   At least one sequence in file /home/biolinux/.cache/ViruLink/Herviviricetes/Herviviricetes.fasta has < 500 bp. These sequences will be skipped.
+2025-05-08 08:35:07,498 - INFO - [00:00:03.818] (7f0d1d661700) INFO   100 sequences sketched.
+2025-05-08 08:35:07,500 - INFO - [00:00:03.822] (7f0cc59ec700) INFO   200 sequences sketched.
+2025-05-08 08:35:07,503 - INFO - [00:00:03.824] (7f0cc6bf5700) INFO   300 sequences sketched.
+2025-05-08 08:35:07,506 - INFO - [00:00:03.828] (7f0d1e468700) INFO   400 sequences sketched.
+2025-05-08 08:35:07,509 - INFO - [00:00:03.830] (7f0cc67f3700) INFO   500 sequences sketched.
+2025-05-08 08:35:07,511 - INFO - [00:00:03.833] (7f0d1e669700) INFO   600 sequences sketched.
+2025-05-08 08:35:07,514 - INFO - [00:00:03.835] (7f0d1e267700) INFO   700 sequences sketched.
+2025-05-08 08:35:07,518 - INFO - [00:00:03.837] (7f0d1e468700) INFO   800 sequences sketched.
+2025-05-08 08:35:07,522 - INFO - [00:00:03.840] (7f0cc7bfd700) INFO   900 sequences sketched.
+2025-05-08 08:35:07,522 - INFO - [00:00:03.842] (7f0cc51dc700) INFO   1000 sequences sketched.
+2025-05-08 08:35:07,523 - INFO - [00:00:03.844] (7f0cc59ec700) INFO   1100 sequences sketched.
+2025-05-08 08:35:07,526 - INFO - [00:00:03.847] (7f0d1c239700) INFO   1200 sequences sketched.
+2025-05-08 08:35:07,529 - INFO - [00:00:03.849] (7f0d1ce54700) INFO   1300 sequences sketched.
+2025-05-08 08:35:07,531 - INFO - [00:00:03.852] (7f0cc63f1700) INFO   1400 sequences sketched.
+2025-05-08 08:35:07,533 - INFO - [00:00:03.855] (7f0cc73f9700) INFO   1500 sequences sketched.
+2025-05-08 08:35:07,536 - INFO - [00:00:03.857] (7f0cc75fa700) INFO   1600 sequences sketched.
+2025-05-08 08:35:07,580 - INFO - [00:00:03.902] (7f0d1ec6d800) INFO   Sketching time: 3.9021113
+2025-05-08 08:35:07,599 - INFO - Command 'skani sketch -i '/home/biolinux/.cache/ViruLink/Herviviricetes/Herviviricetes.fasta' -o '/home/biolinux/.cache/ViruLink/Herviviricetes/ANI_sketch' --medium -t 48' completed successfully
+2025-05-08 08:35:07,606 - INFO - Calculating ANI distances for Herviviricetes using --medium mode.
+2025-05-08 08:35:07,606 - INFO - Running command: skani dist --rl '/home/biolinux/.cache/ViruLink/Herviviricetes/ANI_sketch/sketches.txt' --ql '/home/biolinux/.cache/ViruLink/Herviviricetes/ANI_sketch/sketches.txt' -o '/home/biolinux/.cache/ViruLink/Herviviricetes/self_ANI.tsv' -t 48 --medium
+2025-05-08 08:35:07,614 - INFO - [00:00:00.001] (7fb2beeaa800) INFO   skani dist --rl /home/biolinux/.cache/ViruLink/Herviviricetes/ANI_sketch/sketches.txt --ql /home/biolinux/.cache/ViruLink/Herviviricetes/ANI_sketch/sketches.txt -o /home/biolinux/.cache/ViruLink/Herviviricetes/self_ANI.tsv -t 48 --medium
+2025-05-08 08:35:07,614 - INFO - [00:00:00.001] (7fb2beeaa800) INFO   Sketches detected.
+2025-05-08 08:35:07,952 - INFO - [00:00:00.339] (7fb2beeaa800) INFO   Learned ANI mode detected. ANI may be adjusted according to a regression model trained on MAGs.
+2025-05-08 08:35:07,952 - INFO - [00:00:00.339] (7fb2beeaa800) INFO   Full index option detected; generating marker hash table
+2025-05-08 08:35:07,970 - INFO - [00:00:00.358] (7fb2beeaa800) INFO   Full indexing time: 0.018460669
+2025-05-08 08:35:07,971 - INFO - [00:00:00.358] (7fb2beeaa800) INFO   Generating sketch time: 0.35653618
+2025-05-08 08:35:09,743 - INFO - [00:00:02.130] (7fb2935fa700) INFO   100 query sequences processed.
+2025-05-08 08:35:11,326 - INFO - [00:00:03.714] (7fb2915ea700) INFO   200 query sequences processed.
+2025-05-08 08:35:12,599 - INFO - [00:00:04.987] (7fb2bcc89700) INFO   300 query sequences processed.
+2025-05-08 08:35:14,234 - INFO - [00:00:06.621] (7fb2923f1700) INFO   400 query sequences processed.
+2025-05-08 08:35:15,541 - INFO - [00:00:07.928] (7fb293dfe700) INFO   500 query sequences processed.
+2025-05-08 08:35:16,588 - INFO - [00:00:08.975] (7fb2bc67d700) INFO   600 query sequences processed.
+2025-05-08 08:35:18,236 - INFO - [00:00:10.623] (7fb2bd49c700) INFO   700 query sequences processed.
+2025-05-08 08:35:19,726 - INFO - [00:00:12.113] (7fb291fef700) INFO   800 query sequences processed.
+2025-05-08 08:35:21,145 - INFO - [00:00:13.532] (7fb2923f1700) INFO   900 query sequences processed.
+2025-05-08 08:35:22,510 - INFO - [00:00:14.897] (7fb2929f4700) INFO   1000 query sequences processed.
+2025-05-08 08:35:23,722 - INFO - [00:00:16.109] (7fb2bc275700) INFO   1100 query sequences processed.
+2025-05-08 08:35:25,418 - INFO - [00:00:17.805] (7fb2bc476700) INFO   1200 query sequences processed.
+2025-05-08 08:35:26,993 - INFO - [00:00:19.380] (7fb2929f4700) INFO   1300 query sequences processed.
+2025-05-08 08:35:28,789 - INFO - [00:00:21.176] (7fb2bd49c700) INFO   1400 query sequences processed.
+2025-05-08 08:35:30,398 - INFO - [00:00:22.785] (7fb2bc275700) INFO   1500 query sequences processed.
+2025-05-08 08:35:32,760 - INFO - [00:00:25.148] (7fb2bdea1700) INFO   1600 query sequences processed.
+2025-05-08 08:35:33,520 - INFO - [00:00:25.907] (7fb2beeaa800) INFO   ANI calculation time: 25.54943
+2025-05-08 08:35:33,943 - INFO - Command 'skani dist --rl '/home/biolinux/.cache/ViruLink/Herviviricetes/ANI_sketch/sketches.txt' --ql '/home/biolinux/.cache/ViruLink/Herviviricetes/ANI_sketch/sketches.txt' -o '/home/biolinux/.cache/ViruLink/Herviviricetes/self_ANI.tsv' -t 48 --medium' completed successfully
+2025-05-08 08:35:36,220 - INFO - ======================================================================
+2025-05-08 08:35:36,220 - INFO - ============== CREATING ANI NETWORK FOR MONJIVIRICETES ===============
+2025-05-08 08:35:36,221 - INFO - ======================================================================
+2025-05-08 08:35:36,221 - INFO - Creating ANI sketches for Monjiviricetes in /home/biolinux/.cache/ViruLink/Monjiviricetes/ANI_sketch using --medium mode.
+2025-05-08 08:35:36,221 - INFO - Running command: skani sketch -i '/home/biolinux/.cache/ViruLink/Monjiviricetes/Monjiviricetes.fasta' -o '/home/biolinux/.cache/ViruLink/Monjiviricetes/ANI_sketch' --medium -t 48
+2025-05-08 08:35:36,227 - INFO - [00:00:00.000] (7f913a66e800) INFO   skani sketch -i /home/biolinux/.cache/ViruLink/Monjiviricetes/Monjiviricetes.fasta -o /home/biolinux/.cache/ViruLink/Monjiviricetes/ANI_sketch --medium -t 48
+2025-05-08 08:35:36,227 - INFO - [00:00:00.000] (7f913a66e800) INFO   Sketching files...
+2025-05-08 08:35:36,350 - INFO - [00:00:00.122] (7f913a66e800) WARN   At least one sequence in file /home/biolinux/.cache/ViruLink/Monjiviricetes/Monjiviricetes.fasta has < 500 bp. These sequences will be skipped.
+2025-05-08 08:35:36,423 - INFO - [00:00:00.194] (7f9139263700) INFO   100 sequences sketched.
+2025-05-08 08:35:36,425 - INFO - [00:00:00.197] (7f9138a59700) INFO   200 sequences sketched.
+2025-05-08 08:35:36,428 - INFO - [00:00:00.200] (7f9110fe4700) INFO   300 sequences sketched.
+2025-05-08 08:35:36,430 - INFO - [00:00:00.202] (7f91123f1700) INFO   400 sequences sketched.
+2025-05-08 08:35:36,432 - INFO - [00:00:00.204] (7f91129f4700) INFO   500 sequences sketched.
+2025-05-08 08:35:36,434 - INFO - [00:00:00.206] (7f9113fff700) INFO   600 sequences sketched.
+2025-05-08 08:35:36,439 - INFO - [00:00:00.208] (7f9139866700) INFO   700 sequences sketched.
+2025-05-08 08:35:36,439 - INFO - [00:00:00.210] (7f91113e9700) INFO   800 sequences sketched.
+2025-05-08 08:35:36,442 - INFO - [00:00:00.212] (7f9113dfe700) INFO   900 sequences sketched.
+2025-05-08 08:35:36,442 - INFO - [00:00:00.213] (7f9139e69700) INFO   1000 sequences sketched.
+2025-05-08 08:35:36,443 - INFO - [00:00:00.215] (7f9138c5d700) INFO   1100 sequences sketched.
+2025-05-08 08:35:36,445 - INFO - [00:00:00.217] (7f91107d4700) INFO   1200 sequences sketched.
+2025-05-08 08:35:36,447 - INFO - [00:00:00.219] (7f9139665700) INFO   1300 sequences sketched.
+2025-05-08 08:35:36,449 - INFO - [00:00:00.221] (7f9138855700) INFO   1400 sequences sketched.
+2025-05-08 08:35:36,460 - INFO - [00:00:00.233] (7f913a66e800) INFO   Sketching time: 0.23318665
+2025-05-08 08:35:36,463 - INFO - Command 'skani sketch -i '/home/biolinux/.cache/ViruLink/Monjiviricetes/Monjiviricetes.fasta' -o '/home/biolinux/.cache/ViruLink/Monjiviricetes/ANI_sketch' --medium -t 48' completed successfully
+2025-05-08 08:35:36,467 - INFO - Calculating ANI distances for Monjiviricetes using --small-genomes mode.
+2025-05-08 08:35:36,468 - INFO - Running command: skani dist --rl '/home/biolinux/.cache/ViruLink/Monjiviricetes/ANI_sketch/sketches.txt' --ql '/home/biolinux/.cache/ViruLink/Monjiviricetes/ANI_sketch/sketches.txt' -o '/home/biolinux/.cache/ViruLink/Monjiviricetes/self_ANI.tsv' -t 48 --small-genomes
+2025-05-08 08:35:36,474 - INFO - [00:00:00.001] (7f3ff14e2800) INFO   skani dist --rl /home/biolinux/.cache/ViruLink/Monjiviricetes/ANI_sketch/sketches.txt --ql /home/biolinux/.cache/ViruLink/Monjiviricetes/ANI_sketch/sketches.txt -o /home/biolinux/.cache/ViruLink/Monjiviricetes/self_ANI.tsv -t 48 --small-genomes
+2025-05-08 08:35:36,474 - INFO - [00:00:00.001] (7f3ff14e2800) INFO   Sketches detected.
+2025-05-08 08:35:36,488 - INFO - [00:00:00.015] (7f3ff14e2800) WARN   Parameters from .sketch files not equal to the input parameters. Using parameters from .sketch files.
+2025-05-08 08:35:36,504 - INFO - [00:00:00.031] (7f3ff14e2800) INFO   Full index option detected; generating marker hash table
+2025-05-08 08:35:36,506 - INFO - [00:00:00.033] (7f3ff14e2800) INFO   Full indexing time: 0.00194871
+2025-05-08 08:35:36,507 - INFO - [00:00:00.033] (7f3ff14e2800) INFO   Generating sketch time: 0.03263858
+2025-05-08 08:35:36,513 - INFO - [00:00:00.040] (7f3fc7fff700) INFO   100 query sequences processed.
+2025-05-08 08:35:36,521 - INFO - [00:00:00.048] (7f3fd17eb700) INFO   200 query sequences processed.
+2025-05-08 08:35:36,527 - INFO - [00:00:00.054] (7f3ff0cdd700) INFO   300 query sequences processed.
+2025-05-08 08:35:36,532 - INFO - [00:00:00.059] (7f3fd3fff700) INFO   400 query sequences processed.
+2025-05-08 08:35:36,538 - INFO - [00:00:00.065] (7f3fc73f9700) INFO   500 query sequences processed.
+2025-05-08 08:35:36,544 - INFO - [00:00:00.071] (7f3fd29f4700) INFO   600 query sequences processed.
+2025-05-08 08:35:36,551 - INFO - [00:00:00.078] (7f3fd33f9700) INFO   700 query sequences processed.
+2025-05-08 08:35:36,557 - INFO - [00:00:00.084] (7f3ff14e1700) INFO   800 query sequences processed.
+2025-05-08 08:35:36,562 - INFO - [00:00:00.088] (7f3fd25f2700) INFO   900 query sequences processed.
+2025-05-08 08:35:36,569 - INFO - [00:00:00.095] (7f3ff04d9700) INFO   1000 query sequences processed.
+2025-05-08 08:35:36,574 - INFO - [00:00:00.100] (7f3fd05e2700) INFO   1100 query sequences processed.
+2025-05-08 08:35:36,581 - INFO - [00:00:00.108] (7f3fd1bed700) INFO   1200 query sequences processed.
+2025-05-08 08:35:36,588 - INFO - [00:00:00.115] (7f3fd07e3700) INFO   1300 query sequences processed.
+2025-05-08 08:35:36,596 - INFO - [00:00:00.123] (7f3fd13e9700) INFO   1400 query sequences processed.
+2025-05-08 08:35:36,648 - INFO - [00:00:00.175] (7f3ff14e2800) INFO   ANI calculation time: 0.14134686
+2025-05-08 08:35:36,670 - INFO - Command 'skani dist --rl '/home/biolinux/.cache/ViruLink/Monjiviricetes/ANI_sketch/sketches.txt' --ql '/home/biolinux/.cache/ViruLink/Monjiviricetes/ANI_sketch/sketches.txt' -o '/home/biolinux/.cache/ViruLink/Monjiviricetes/self_ANI.tsv' -t 48 --small-genomes' completed successfully

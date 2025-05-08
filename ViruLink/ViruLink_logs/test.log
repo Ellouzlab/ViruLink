@@ -1,0 +1,133 @@
+2025-05-08 10:23:49,995 - INFO - ======================================================================
+2025-05-08 10:23:49,995 - INFO - =================== LOADING LEVIVIRICETES DATABASE ===================
+2025-05-08 10:23:49,995 - INFO - ======================================================================
+2025-05-08 10:23:50,269 - INFO - ANI Graph: 89 edges
+2025-05-08 10:23:50,269 - INFO - HYP Graph: 66158 edges
+2025-05-08 10:23:50,270 - INFO - ======================================================================
+2025-05-08 10:23:50,270 - INFO - ======================== PERFORMING NODE2VEC =========================
+2025-05-08 10:23:50,270 - INFO - ======================================================================
+2025-05-08 10:23:50,285 - INFO - collecting all words and their counts
+2025-05-08 10:23:50,285 - INFO - PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
+2025-05-08 10:23:50,297 - INFO - collected 35 word types from a corpus of 73500 raw words and 3500 sentences
+2025-05-08 10:23:50,297 - INFO - Creating a fresh vocabulary
+2025-05-08 10:23:50,300 - INFO - Word2Vec lifecycle event {'msg': 'effective_min_count=0 retains 35 unique words (100.00% of original 35, drops 0)', 'datetime': '2025-05-08T10:23:50.298059', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'prepare_vocab'}
+2025-05-08 10:23:50,300 - INFO - Word2Vec lifecycle event {'msg': 'effective_min_count=0 leaves 73500 word corpus (100.00% of original 73500, drops 0)', 'datetime': '2025-05-08T10:23:50.300357', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'prepare_vocab'}
+2025-05-08 10:23:50,300 - INFO - deleting the raw counts dictionary of 35 items
+2025-05-08 10:23:50,300 - INFO - sample=0.001 downsamples 35 most-common words
+2025-05-08 10:23:50,300 - INFO - Word2Vec lifecycle event {'msg': 'downsampling leaves estimated 16312.367782806947 word corpus (22.2%% of prior 73500)', 'datetime': '2025-05-08T10:23:50.300905', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'prepare_vocab'}
+2025-05-08 10:23:50,301 - INFO - estimated required memory for 35 words and 64 dimensions: 35420 bytes
+2025-05-08 10:23:50,301 - INFO - resetting layer weights
+2025-05-08 10:23:50,301 - INFO - Word2Vec lifecycle event {'update': False, 'trim_rule': 'None', 'datetime': '2025-05-08T10:23:50.301850', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'build_vocab'}
+2025-05-08 10:23:50,302 - INFO - Word2Vec lifecycle event {'msg': 'training model with 48 workers on 35 vocabulary and 64 features, using sg=1 hs=0 sample=0.001 negative=5 window=5 shrink_windows=True', 'datetime': '2025-05-08T10:23:50.302000', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'train'}
+2025-05-08 10:23:50,368 - INFO - EPOCH 0: training on 73500 raw words (16390 effective words) took 0.0s, 409995 effective words/s
+2025-05-08 10:23:50,431 - INFO - EPOCH 1: training on 73500 raw words (16285 effective words) took 0.0s, 383769 effective words/s
+2025-05-08 10:23:50,496 - INFO - EPOCH 2: training on 73500 raw words (16365 effective words) took 0.0s, 367168 effective words/s
+2025-05-08 10:23:50,561 - INFO - EPOCH 3: training on 73500 raw words (16062 effective words) took 0.0s, 386028 effective words/s
+2025-05-08 10:23:50,628 - INFO - EPOCH 4: training on 73500 raw words (16450 effective words) took 0.0s, 376653 effective words/s
+2025-05-08 10:23:50,628 - INFO - Word2Vec lifecycle event {'msg': 'training on 367500 raw words (81552 effective words) took 0.3s, 249902 effective words/s', 'datetime': '2025-05-08T10:23:50.628464', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'train'}
+2025-05-08 10:23:50,628 - INFO - Word2Vec lifecycle event {'params': 'Word2Vec<vocab=35, vector_size=64, alpha=0.025>', 'datetime': '2025-05-08T10:23:50.628704', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'created'}
+2025-05-08 10:23:51,808 - INFO - collecting all words and their counts
+2025-05-08 10:23:51,808 - INFO - PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
+2025-05-08 10:23:51,844 - INFO - PROGRESS: at sentence #10000, processed 210000 words, keeping 703 word types
+2025-05-08 10:23:51,883 - INFO - PROGRESS: at sentence #20000, processed 420000 words, keeping 736 word types
+2025-05-08 10:23:51,922 - INFO - PROGRESS: at sentence #30000, processed 630000 words, keeping 755 word types
+2025-05-08 10:23:51,962 - INFO - PROGRESS: at sentence #40000, processed 840000 words, keeping 761 word types
+2025-05-08 10:23:52,001 - INFO - PROGRESS: at sentence #50000, processed 1050000 words, keeping 761 word types
+2025-05-08 10:23:52,041 - INFO - PROGRESS: at sentence #60000, processed 1260000 words, keeping 764 word types
+2025-05-08 10:23:52,082 - INFO - PROGRESS: at sentence #70000, processed 1470000 words, keeping 766 word types
+2025-05-08 10:23:52,109 - INFO - collected 766 word types from a corpus of 1608600 raw words and 76600 sentences
+2025-05-08 10:23:52,109 - INFO - Creating a fresh vocabulary
+2025-05-08 10:23:52,111 - INFO - Word2Vec lifecycle event {'msg': 'effective_min_count=0 retains 766 unique words (100.00% of original 766, drops 0)', 'datetime': '2025-05-08T10:23:52.111630', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'prepare_vocab'}
+2025-05-08 10:23:52,111 - INFO - Word2Vec lifecycle event {'msg': 'effective_min_count=0 leaves 1608600 word corpus (100.00% of original 1608600, drops 0)', 'datetime': '2025-05-08T10:23:52.111801', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'prepare_vocab'}
+2025-05-08 10:23:52,116 - INFO - deleting the raw counts dictionary of 766 items
+2025-05-08 10:23:52,116 - INFO - sample=0.001 downsamples 2 most-common words
+2025-05-08 10:23:52,116 - INFO - Word2Vec lifecycle event {'msg': 'downsampling leaves estimated 1607913.0156334797 word corpus (100.0%% of prior 1608600)', 'datetime': '2025-05-08T10:23:52.116290', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'prepare_vocab'}
+2025-05-08 10:23:52,123 - INFO - estimated required memory for 766 words and 64 dimensions: 775192 bytes
+2025-05-08 10:23:52,123 - INFO - resetting layer weights
+2025-05-08 10:23:52,124 - INFO - Word2Vec lifecycle event {'update': False, 'trim_rule': 'None', 'datetime': '2025-05-08T10:23:52.124393', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'build_vocab'}
+2025-05-08 10:23:52,124 - INFO - Word2Vec lifecycle event {'msg': 'training model with 48 workers on 766 vocabulary and 64 features, using sg=1 hs=0 sample=0.001 negative=5 window=5 shrink_windows=True', 'datetime': '2025-05-08T10:23:52.124546', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'train'}
+2025-05-08 10:23:53,161 - INFO - EPOCH 0 - PROGRESS: at 90.10% examples, 1426769 words/s, in_qsize 16, out_qsize 1
+2025-05-08 10:23:53,204 - INFO - EPOCH 0: training on 1608600 raw words (1607970 effective words) took 1.1s, 1518165 effective words/s
+2025-05-08 10:23:54,226 - INFO - EPOCH 1 - PROGRESS: at 90.10% examples, 1443949 words/s, in_qsize 16, out_qsize 1
+2025-05-08 10:23:54,266 - INFO - EPOCH 1: training on 1608600 raw words (1607914 effective words) took 1.0s, 1541285 effective words/s
+2025-05-08 10:23:55,304 - INFO - EPOCH 2 - PROGRESS: at 91.97% examples, 1455626 words/s, in_qsize 13, out_qsize 1
+2025-05-08 10:23:55,326 - INFO - EPOCH 2: training on 1608600 raw words (1607887 effective words) took 1.0s, 1549154 effective words/s
+2025-05-08 10:23:56,348 - INFO - EPOCH 3 - PROGRESS: at 91.97% examples, 1475909 words/s, in_qsize 13, out_qsize 1
+2025-05-08 10:23:56,372 - INFO - EPOCH 3: training on 1608600 raw words (1607876 effective words) took 1.0s, 1566653 effective words/s
+2025-05-08 10:23:57,392 - INFO - EPOCH 4 - PROGRESS: at 98.76% examples, 1587604 words/s, in_qsize 2, out_qsize 1
+2025-05-08 10:23:57,398 - INFO - EPOCH 4: training on 1608600 raw words (1607923 effective words) took 1.0s, 1597817 effective words/s
+2025-05-08 10:23:57,398 - INFO - Word2Vec lifecycle event {'msg': 'training on 8043000 raw words (8039570 effective words) took 5.3s, 1524426 effective words/s', 'datetime': '2025-05-08T10:23:57.398500', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'train'}
+2025-05-08 10:23:57,398 - INFO - Word2Vec lifecycle event {'params': 'Word2Vec<vocab=766, vector_size=64, alpha=0.025>', 'datetime': '2025-05-08T10:23:57.398689', 'gensim': '4.3.3', 'python': '3.12.10 | packaged by conda-forge | (main, Apr 10 2025, 22:21:13) [GCC 13.3.0]', 'platform': 'Linux-5.4.0-212-generic-x86_64-with-glibc2.31', 'event': 'created'}
+2025-05-08 10:23:57,458 - INFO - Node2vec embeddings generated for 766 nodes
+2025-05-08 10:23:57,458 - INFO - train/val/test sizes: 612/77/77
+2025-05-08 10:23:57,458 - INFO - ======================================================================
+2025-05-08 10:23:57,458 - INFO - ================ LOADING LEVIVIRICETES RELATIONSHIPS =================
+2025-05-08 10:23:57,458 - INFO - ======================================================================
+2025-05-08 10:23:57,720 - INFO - Relationship edges: train - 186966 | val - 2926 | test - 2926
+2025-05-08 10:23:57,720 - INFO - ======================================================================
+2025-05-08 10:23:57,720 - INFO - ========================= SAMPLING TRIANGLES =========================
+2025-05-08 10:23:57,720 - INFO - ======================================================================
+2025-05-08 10:23:57,721 - INFO - This may take a while …
+2025-05-08 10:23:57,904 - INFO - train triangles = 40000
+2025-05-08 10:23:57,904 - INFO - val triangles = 5000
+2025-05-08 10:23:57,904 - INFO - test triangles = 5000
+2025-05-08 10:23:59,630 - INFO - ======================================================================
+2025-05-08 10:23:59,631 - INFO - ====================== TRAINING EDGE PREDICTOR =======================
+2025-05-08 10:23:59,631 - INFO - ======================================================================
+2025-05-08 10:24:08,291 - INFO - Ep01  train L=1.101 hit=0.444 acc=0.391   val L=0.506 hit=0.726 acc=0.685
+2025-05-08 10:24:18,632 - INFO - Ep02  train L=0.414 hit=0.790 acc=0.761   val L=0.328 hit=0.811 acc=0.784
+2025-05-08 10:24:28,978 - INFO - Ep03  train L=0.287 hit=0.857 acc=0.840   val L=0.285 hit=0.817 acc=0.790
+2025-05-08 10:24:39,296 - INFO - Ep04  train L=0.229 hit=0.881 acc=0.867   val L=0.269 hit=0.816 acc=0.786
+2025-05-08 10:24:49,561 - INFO - Ep05  train L=0.198 hit=0.898 acc=0.886   val L=0.274 hit=0.808 acc=0.773
+2025-05-08 10:24:59,680 - INFO - Ep06  train L=0.179 hit=0.907 acc=0.896   val L=0.281 hit=0.817 acc=0.789
+2025-05-08 10:25:09,590 - INFO - Ep07  train L=0.165 hit=0.913 acc=0.904   val L=0.300 hit=0.801 acc=0.769
+2025-05-08 10:25:18,446 - INFO - Ep08  train L=0.154 hit=0.918 acc=0.909   val L=0.298 hit=0.810 acc=0.778
+2025-05-08 10:25:25,527 - INFO - Ep09  train L=0.145 hit=0.922 acc=0.915   val L=0.313 hit=0.797 acc=0.760
+2025-05-08 10:25:32,656 - INFO - Ep10  train L=0.138 hit=0.924 acc=0.917   val L=0.341 hit=0.787 acc=0.755
+2025-05-08 10:25:39,259 - INFO - TRAIN confusion matrix:
+           NR  Order  Family  Genus  Species
+NR       4753    164      88      0        0
+Order      48   4366     138      0        0
+Family    128    369    6715    742        4
+Genus      16     12    1077   6892        3
+Species     0      0       0      0     8000
+2025-05-08 10:25:39,261 - INFO - VAL confusion matrix:
+          NR  Order  Family  Genus  Species
+NR       489     58      36      0        0
+Order     26    518      39      0        0
+Family    43     46     755    155        1
+Genus      0      0     615    385        0
+Species    0      0       0      0     1000
+2025-05-08 10:25:39,262 - INFO - TEST confusion matrix:
+          NR  Order  Family  Genus  Species
+NR       614     14       0      1        0
+Order      1    525      20      3        0
+Family    15     45     824     98        1
+Genus      0     20     272    446        6
+Species    0      0       0      0     1000
+2025-05-08 10:25:39,262 - INFO - 
+Leviviricetes  hit=0.925/0.787/0.854  acc=0.917/0.755/0.873
+2025-05-08 10:25:39,266 - INFO - TRAIN hierarchical metrics:
+2025-05-08 10:25:39,266 - INFO -   NR     prec=0.961 rec=0.950 f1=0.955 sup=5005
+2025-05-08 10:25:39,266 - INFO -   Order  prec=0.991 rec=0.993 f1=0.992 sup=28510
+2025-05-08 10:25:39,266 - INFO -   Family prec=0.990 rec=0.978 f1=0.984 sup=23958
+2025-05-08 10:25:39,266 - INFO -   Genus  prec=0.952 rec=0.931 f1=0.941 sup=16000
+2025-05-08 10:25:39,266 - INFO -   Species prec=0.999 rec=1.000 f1=1.000 sup=8000
+2025-05-08 10:25:39,266 - INFO -   Spearman rho=1.000, Kendall tau=1.000
+2025-05-08 10:25:39,269 - INFO - VAL hierarchical metrics:
+2025-05-08 10:25:39,269 - INFO -   NR     prec=0.876 rec=0.839 f1=0.857 sup=583
+2025-05-08 10:25:39,269 - INFO -   Order  prec=0.974 rec=0.981 f1=0.977 sup=3583
+2025-05-08 10:25:39,269 - INFO -   Family prec=0.975 rec=0.970 f1=0.973 sup=3000
+2025-05-08 10:25:39,269 - INFO -   Genus  prec=0.899 rec=0.693 f1=0.782 sup=2000
+2025-05-08 10:25:39,269 - INFO -   Species prec=0.999 rec=1.000 f1=1.000 sup=1000
+2025-05-08 10:25:39,269 - INFO -   Spearman rho=1.000, Kendall tau=1.000
+2025-05-08 10:25:39,272 - INFO - TEST hierarchical metrics:
+2025-05-08 10:25:39,272 - INFO -   NR     prec=0.975 rec=0.976 f1=0.975 sup=629
+2025-05-08 10:25:39,272 - INFO -   Order  prec=0.995 rec=0.995 f1=0.995 sup=3276
+2025-05-08 10:25:39,272 - INFO -   Family prec=0.991 rec=0.971 f1=0.981 sup=2727
+2025-05-08 10:25:39,272 - INFO -   Genus  prec=0.934 rec=0.833 f1=0.880 sup=1744
+2025-05-08 10:25:39,272 - INFO -   Species prec=0.993 rec=1.000 f1=0.997 sup=1000
+2025-05-08 10:25:39,272 - INFO -   Spearman rho=1.000, Kendall tau=1.000
+2025-05-08 10:25:39,272 - INFO - ======================================================================
+2025-05-08 10:25:39,272 - INFO - ================== FINISHED LEVIVIRICETES DATABASE ===================
+2025-05-08 10:25:39,272 - INFO - ======================================================================
