@@ -2,7 +2,6 @@
  *  hypergeom.cpp  ―  genome-pair hyper-geometric test (global U)
  *                    output =  c / min(a,b)  when p ≤ α, else 0
  *
- *  2025-05-06  (Sulman request)
  *    • Global universe  U = |keep|
  *    • Weight formula   c/min(a,b)   instead of −log10 p
  *    • Direct NumPy allocation (no capsule needed)
