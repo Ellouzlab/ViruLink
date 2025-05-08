@@ -648,7 +648,10 @@ def ClassifyHandler(arguments, classes_df):
 
 
     classif_df = pd.DataFrame(results)
-    classif_df = classif_df.drop("NR", axis=1)
+    try:
+        classif_df = classif_df.drop("NR", axis=1)
+    except:
+        pass
     logging_header("Classification results")
     print(classif_df.to_string(index=False))
     classif_df.to_csv(arguments.output, index=False)
