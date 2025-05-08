@@ -1,60 +1,89 @@
 # ViruLink
-A tool to classify Viruses (or at the moment, only Caudoviricetes, Monjiviricetes, and Herviviricetes)
+**ViruLink** is a tool for virus classification  
+(currently supports **Caudoviricetes**, **Monjiviricetes**, and **Herviviricetes**).
 
-### Download/Installation
-1. Clone this repository:
-   
-	`git clone https://github.com/Ellouzlab/ViruLink.git`
-3. Create a conda/mamba env with python>=3.10, Diamond (later than version 2), MMseqs2 (later than version 14) and skani (0.2.2):
+---
 
-	`mamba create -n ViruLink bioconda::diamond=2 python=3.12 bioconda::skani=0.2.2`
-4. Activate environment:
-   
-	`mamba activate ViruLink`
-6. change directories into ViruLink:
-   
-	`cd ViruLink`
-8. Install program via pip:
-   
-	`python -m pip install -e .`
+## Installation
 
+```bash
+# 1. Clone the repository
+git clone https://github.com/Ellouzlab/ViruLink.git
+cd ViruLink
 
-### Usage
-1. Get help:
-   
-	`ViruLink -h`
-3. Download all databases to .cache (only needs to be run once, ever):
-   
-	`ViruLink download --all`
-5. Process databases and build ANI and hypergeometric graphs (only needs to be run once, ever):
-   
-	`ViruLink process --all`
-7. Run performance tests (Optional):
-   
-	`ViruLink test --all`
-8. Classify a query virus:
+# 2. Create a Conda/Mamba environment
+mamba create -n ViruLink python=3.12 "bioconda::diamond>=2" "bioconda::skani=0.2.2"
 
-   	`ViruLink classify --query 'PATH_TO_YOUR_QUERY' --database 'OPTION_FROM_AMONG_DATABASES' --output 'PATH_TO_OUT_CSV'`
+# 3. Activate the environment
+mamba activate ViruLink
 
-For queries, each viral genome should be represented with a single contig, with all ids being unique.
+# 4. Install ViruLink in editable mode
+python -m pip install -e .
+```
 
-NOTE: If you have a viral genome with multiple contigs, you can concatenate them end-to-end all the contigs and use ViruLink - it won't make a difference in the results. Here is an example:
+---
 
-	>virus_contig_1
- 	AAAAAAAAAAAAAAA
-  
-  	>virus_contig_2
-   	TTTTTTTTTTTTTTT
+## Usage
 
-		||
-  		\/
-    >virus
-	AAAAAAAAAAAAAA
- 	TTTTTTTTTTTTTT
+### Get help
+```bash
+ViruLink -h
+```
 
+### One-time setup
+```bash
+# Download all databases (run once)
+ViruLink download --all
 
+# Build ANI + hypergeometric graphs (run once)
+ViruLink process --all
+```
 
-Please check ViruLink/ViruLink/setup/score_profiles to change what ranks can be predicted. Currently, the code in this repository will not lead to performance tests using the Evo2 encoder. Code only works on linux systems.
+### (Optional) run built-in tests
+```bash
+ViruLink test --all
+```
 
-### Contacts
-Creator: Muhammad Sulman (sulmanmu40@gmail.com)
+### Classify a query genome
+```bash
+ViruLink classify \
+  --query    PATH_TO_QUERY.fasta \
+  --database DATABASE_NAME \
+  --output   results.csv
+```
+
+#### Input requirements
+* Provide each genome as **one** FASTA record with a unique ID.
+* If your genome spans several contigs, simply concatenate them; classification results are unchanged.  
+  Example:
+
+  ```fasta
+  >virus_contig_1
+  AAAAAAAAAAAAAAA
+  >virus_contig_2
+  TTTTTTTTTTTTTTT
+  ```
+
+  becomes
+
+  ```fasta
+  >virus
+  AAAAAAAAAAAAAAA
+  TTTTTTTTTTTTTTT
+  ```
+
+---
+
+## Configuration
+
+To change which taxonomic ranks are predicted, edit  
+`ViruLink/setup/score_profiles/*`.
+
+*Evo2 encoder performance tests are disabled in this repo.  
+Linux only.*
+
+---
+
+## Contact
+
+Muhammad Sulman · <sulmanmu40@gmail.com>
