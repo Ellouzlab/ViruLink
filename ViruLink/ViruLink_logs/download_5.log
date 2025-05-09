@@ -1,5 +1,0 @@
-2025-05-08 10:08:53,599 - INFO - Downloading Leviviricetes unprocessed data.
-2025-05-08 10:08:53,599 - INFO - Downloading https://drive.google.com/drive/folders/1jcPRTOx_DLt1Osu4woMNZG6Os-4PCvMp?usp=drive_link to /home/biolinux/.cache/ViruLink/Leviviricetes
-2025-05-08 10:09:02,428 - INFO - Downloaded https://drive.google.com/drive/folders/1jcPRTOx_DLt1Osu4woMNZG6Os-4PCvMp?usp=drive_link to /home/biolinux/.cache/ViruLink/Leviviricetes
-2025-05-08 10:09:02,822 - INFO - Updated DataFrame saved to /home/biolinux/.cache/ViruLink/Leviviricetes/Leviviricetes.csv.
-2025-05-08 10:09:02,822 - INFO - Updated FASTA file saved to /home/biolinux/.cache/ViruLink/Leviviricetes/Leviviricetes.fasta.
