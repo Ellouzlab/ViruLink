@@ -87,7 +87,7 @@ ViruLink classify \
   ```
 
 
-## Computational Requirements
+#### Computational Requirements
 *Currently Linux ONLY* 
 Windows and Mac OS support will arrive within the next few weeks!
 
