@@ -25,9 +25,13 @@ python -m pip install -e .
 
 ## Usage
 
-### Get help and a list of supported databases
+### Get help
 ```bash
+# Get a list of supported options
 ViruLink -h
+
+# Learn what databases (viral classes) are currently supported by ViruLink
+ViruLink download -h
 ```
 
 ### One-time setup
