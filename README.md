@@ -92,7 +92,7 @@ ViruLink classify \
 
 Windows and Mac OS support will arrive within the next few weeks!
 
-RNA virus databases require ~2Gb of RAM. DNA viruses, ~8Gb.
+RNA virus databases require ~2Gb of RAM. DNA viruses, ~8Gb. GPU may lead to slight speedups, but not required!
 
 ---
 
