@@ -25,18 +25,28 @@ python -m pip install -e .
 
 ## Usage
 
-### Get help
+### Get help and a list of supported databases
 ```bash
 ViruLink -h
 ```
 
 ### One-time setup
+
+#### Handle all viruses:
 ```bash
 # Download all databases (run once)
 ViruLink download --all
 
 # Build ANI + hypergeometric graphs (run once)
 ViruLink process --all
+```
+#### Or alternatively, handle one specific class of virus
+```bash
+# Download a database (run once)
+ViruLink download --database NAME_OF_DATABASE
+
+# Build ANI + hypergeometric graphs (run once)
+ViruLink process --database NAME_OF_DATABASE
 ```
 
 ### (Optional) run built-in tests
@@ -79,8 +89,8 @@ ViruLink classify \
 To change which taxonomic ranks are predicted, edit  
 `ViruLink/setup/score_profiles/*`.
 
-*Evo2 encoder performance tests are disabled in this repo.  
-Linux only.*
+*Currently Linux ONLY* 
+Windows and Mac OS support will arrive within the next few weeks!
 
 ---
 
