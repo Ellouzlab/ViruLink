@@ -68,7 +68,7 @@ ViruLink classify \
 
 #### Input requirements
 * Provide each genome as **one** FASTA record with a unique ID.
-* If your genome spans several contigs, simply concatenate them; classification results are unchanged.  
+* If your genome spans several contigs, simply concatenate them; classification results are unchanged.  Multiple queries can be in one fasta file - each record will be predicted seperately.
   Example:
 
   ```fasta
@@ -86,15 +86,22 @@ ViruLink classify \
   TTTTTTTTTTTTTTT
   ```
 
+
+## Computational Requirements
+*Currently Linux ONLY* 
+Windows and Mac OS support will arrive within the next few weeks!
+
+RNA virus databases require ~2Gb of RAM. DNA viruses, ~8Gb.
+
 ---
+
 
 ## Configuration
 
 To change which taxonomic ranks are predicted, edit  
 `ViruLink/setup/score_profiles/*`.
 
-*Currently Linux ONLY* 
-Windows and Mac OS support will arrive within the next few weeks!
+
 
 ---
 
