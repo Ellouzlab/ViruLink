@@ -116,6 +116,8 @@ ViruLink classify \
 
 ## Computational requirements
 
+Classification times hover around 30s (except Caudoviricetes, which 
+
 | Database type | RAM needed | GPU benefit |
 |---------------|-----------:|-------------|
 | RNA viruses   | ~2 GB      | Minor speed‑up (optional) |
