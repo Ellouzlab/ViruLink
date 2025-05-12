@@ -50,7 +50,7 @@ It currently supports:
 # List global options
 ViruLink -h
 
-# Discover database‑specific options
+# Discover which databases are available
 ViruLink download -h
 ```
 
