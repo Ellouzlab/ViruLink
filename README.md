@@ -6,6 +6,8 @@ It currently supports:
 - **Caudoviricetes**  
 - **Monjiviricetes**  
 - **Herviviricetes**
+- **Leviviricetes**
+- **Repensiviricetes**
 
 ---
 
