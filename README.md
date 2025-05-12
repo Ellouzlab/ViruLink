@@ -116,7 +116,7 @@ ViruLink classify \
 
 ## Computational requirements
 
-Classification times hover around 30s (except Caudoviricetes, which 
+Classification times hover around 30s (except Caudoviricetes, which is closer to 1min)
 
 | Database type | RAM needed | GPU benefit |
 |---------------|-----------:|-------------|
