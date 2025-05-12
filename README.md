@@ -9,6 +9,7 @@ It currently supports:
 - **Leviviricetes** (Though, it struggles to differentiate between Family and Genus)
 - **Repensiviricetes**
 - **Arfiviricetes**
+- **Megaviricetes**
 
 ---
 
