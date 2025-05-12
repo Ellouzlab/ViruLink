@@ -27,5 +27,25 @@ score_config = {
         "Family":2,
         "Genus":3,
         "Species":4
-    }
+    },
+    "Repensiviricetes": {
+        "NR":0,
+        "Family":1,
+        "Genus":2,
+        "Species":3
+    },
+    "Arfiviricetes": {
+        "NR":0,
+        "Order":1,
+        "Family":2,
+        "Genus":3,
+        "Species":4
+    },
+    "Megaviricetes": {
+        "NR":0,
+        "Order":1,
+        "Family":2,
+        "Subfamily":3,
+        "Genus":4
+    },
 }

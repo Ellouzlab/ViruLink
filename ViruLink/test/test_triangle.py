@@ -38,7 +38,7 @@ BATCH_SIZE = 512
 LR = 1e-3
 NUM_PER_CLASS = 4_000  # triangles per (rank × upper|lower)
 LAMBDA_INT = 1.0
-LAMBDA_TRI = 0.0
+LAMBDA_TRI = 0.2
 EDGE_ORDER = ("r1r2", "qr2", "qr1")   # prediction sequence
 EDGE_PRED_COUNT = 4
 
@@ -281,6 +281,7 @@ def DatabaseTesting(args, db: str):
     lvl2rank = {lvl: r for r, lvl in enumerate(score_config[db])}
     k_classes = max(lvl2rank.values()) + 1
     nr_code = lvl2rank["NR"]
+    RESCALE_ANI = False
 
     # Patch the global symbols **so the helper functions see them**
     global K_CLASSES, NR_CODE
@@ -289,8 +290,21 @@ def DatabaseTesting(args, db: str):
     p = Path(args.databases_loc) / db
 
     logging_header("Loading %s database", db)
-    ani = process_graph(remove_version(pd.read_csv(p / "self_ANI.tsv", sep="\t")))
-    hyp = process_graph(remove_version(pd.read_csv(p / "hypergeom_edges.csv")))
+    ani_edges = remove_version(pd.read_csv(p / "self_ANI.tsv", sep="\t"))
+    hyp_edges = remove_version(pd.read_csv(p / "hypergeom_edges.csv"))
+    
+    if RESCALE_ANI:
+        w = ani_edges["weight"].to_numpy(dtype=float)
+        rng = w.max() - w.min()
+        if rng:                               # avoid divide‑by‑zero on degenerate sets
+            ani_edges["weight"] = (w - w.min()) / rng
+        else:
+            ani_edges["weight"] = 1.0
+            
+    ani = process_graph(ani_edges)
+    hyp = process_graph(hyp_edges)
+    
+    
     logging.info("ANI Graph: %d edges", len(ani))
     logging.info("HYP Graph: %d edges", len(hyp))
 

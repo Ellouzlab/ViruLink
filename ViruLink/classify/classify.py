@@ -360,7 +360,7 @@ def ClassifyHandler(arguments, classes_df):
     LR            = 1e-3
     NUM_PER_CLASS = 4000
     LAMBDA_INT    = 1.0
-    LAMBDA_TRI    = 0.1
+    LAMBDA_TRI    = 0.2
     EDGE_ORDER    = ("r1r2", "qr2", "qr1")   # same prediction schedule
     EDGE_PRED_CNT = 4
 
