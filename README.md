@@ -1,80 +1,96 @@
 # ViruLink
-**ViruLink** is a tool for virus classification  
 
-Currently supports:
+**ViruLink** is a tool for taxonomic classification of viruses.  
+It currently supports:
 
--**Caudoviricetes**
--**Monjiviricetes**
--**Herviviricetes**
--
+- **Caudoviricetes**  
+- **Monjiviricetes**  
+- **Herviviricetes**
 
 ---
 
 ## Installation
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/Ellouzlab/ViruLink.git
-cd ViruLink
+1. **Clone the repository**
 
-# 2. Create a Conda/Mamba environment
-mamba create -n ViruLink python=3.12 "bioconda::diamond>=2" "bioconda::skani=0.2.2"
+   ```bash
+   git clone https://github.com/Ellouzlab/ViruLink.git
+   cd ViruLink
+   ```
 
-# 3. Activate the environment
-mamba activate ViruLink
+2. **Create a Conda/Mamba environment**
 
-# 4. Install ViruLink in editable mode
-python -m pip install -e .
-```
+   ```bash
+   mamba create -n ViruLink python=3.12 "bioconda::diamond>=2" "bioconda::skani=0.2.2"
+   ```
+
+3. **Activate the environment**
+
+   ```bash
+   mamba activate ViruLink
+   ```
+
+4. **Install ViruLink in editable mode**
+
+   ```bash
+   python -m pip install -e .
+   ```
 
 ---
 
 ## Usage
 
-### Get help
+### Help
+
 ```bash
-# Get a list of supported options
+# List global options
 ViruLink -h
 
-# Learn what databases (viral classes) are currently supported by ViruLink
+# Discover database‑specific options
 ViruLink download -h
 ```
 
-### One-time setup
+### One‑time setup
 
-#### Handle all viruses:
+#### All supported virus classes
+
 ```bash
-# Download all databases (run once)
+# Download every database (run once)
 ViruLink download --all
 
 # Build ANI + hypergeometric graphs (run once)
 ViruLink process --all
 ```
-#### Or alternatively, handle one specific class of virus
+
+#### A single virus class
+
 ```bash
-# Download a database (run once)
+# Download one database (run once)
 ViruLink download --database NAME_OF_DATABASE
 
 # Build ANI + hypergeometric graphs (run once)
 ViruLink process --database NAME_OF_DATABASE
 ```
 
-### (Optional) run built-in tests
+### (Optional) run built‑in tests
+
 ```bash
 ViruLink test --all
 ```
 
 ### Classify a query genome
+
 ```bash
 ViruLink classify \
   --query    PATH_TO_QUERY.fasta \
-  --database DATABASE_NAME \
+  --database NAME_OF_DATABASE \
   --output   results.csv
 ```
 
 #### Input requirements
-* Provide each genome as **one** FASTA record with a unique ID.
-* If your genome spans several contigs, simply concatenate them; classification results are unchanged.  Multiple queries can be in one fasta file - each record will be predicted seperately.
+
+- Provide **one** FASTA record per genome. Each record must have a unique identifier.  
+- If your genome spans multiple contigs, concatenate them into a single record; results are unchanged.  
   Example:
 
   ```fasta
@@ -92,26 +108,26 @@ ViruLink classify \
   TTTTTTTTTTTTTTT
   ```
 
+---
 
-#### Computational Requirements
-*Currently Linux ONLY* 
+## Computational requirements
 
-Windows and Mac OS support will arrive within the next few weeks!
+| Database type | RAM needed | GPU benefit |
+|---------------|-----------:|-------------|
+| RNA viruses   | ~2 GB      | Minor speed‑up (optional) |
+| DNA viruses   | ~8 GB      | Minor speed‑up (optional) |
 
-RNA virus databases require ~2Gb of RAM. DNA viruses, ~8Gb. GPU may lead to slight speedups, but not required!
+> **Note:** ViruLink is currently **Linux‑only**. Windows and macOS support will arrive in the coming weeks.
 
 ---
 
-
 ## Configuration
 
-To change which taxonomic ranks are predicted, edit  
+To change which taxonomic ranks are predicted, edit the files in  
 `ViruLink/setup/score_profiles/*`.
-
-
 
 ---
 
 ## Contact
 
-Muhammad Sulman · <sulmanmu40@gmail.com>
+Muhammad Sulman • <sulmanmu40@gmail.com>
