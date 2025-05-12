@@ -6,7 +6,7 @@ It currently supports:
 - **Caudoviricetes**  
 - **Monjiviricetes**  
 - **Herviviricetes**
-- **Leviviricetes** >NOTE: Struggles to differentiate between Family and Genus
+- **Leviviricetes** > **Note:** Struggles to differentiate between Family and Genus
 - **Repensiviricetes**
 
 ---
