@@ -1,6 +1,12 @@
 # ViruLink
 **ViruLink** is a tool for virus classification  
-Currently supports **Caudoviricetes**, **Monjiviricetes**, and **Herviviricetes**. Soon, we will support all well-described viral classes.
+
+Currently supports:
+
+-**Caudoviricetes**
+-**Monjiviricetes**
+-**Herviviricetes**
+-
 
 ---
 
