@@ -10,6 +10,9 @@ It currently supports:
 - **Repensiviricetes**
 - **Arfiviricetes**
 - **Megaviricetes** (struggles to differentiate between Genus and Species, as such Species toggled off)
+- **Revtraviricetes**
+- **Faserviricetes**
+- **Malgrandaviricetes**
 
 ---
 
