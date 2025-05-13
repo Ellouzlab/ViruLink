@@ -7,7 +7,9 @@ def database_info():
         ["Leviviricetes", "https://drive.google.com/drive/folders/1jcPRTOx_DLt1Osu4woMNZG6Os-4PCvMp?usp=drive_link", "unknown_processed", "--medium", "--small-genomes"],
         ["Repensiviricetes", "https://drive.google.com/drive/folders/1LUz6YPQ0raHY0tUuIOPVTHqVsiDRSlm7?usp=drive_link", "unknown_processed", "--medium", "--small-genomes"],
         ["Arfiviricetes", "https://drive.google.com/drive/folders/1Le4_VnnQyAbLyksHjbgBRsR5ssc4mhb3?usp=drive_link", "unknown_processed", "--medium", "--small-genomes"],
-        ["Megaviricetes", "https://drive.google.com/drive/folders/1FSPCiJcVO4XE2PaxwqNTU9w-pqqmObvQ?usp=drive_link", "unknown_processed", "--medium", "--medium"]
+        ["Revtraviricetes", "https://drive.google.com/drive/folders/1VQMbr_gSzLdPKP5rIwG8hlpvQCNdhBOp?usp=drive_link", "unknown_processed", "--medium", "--small-genomes"],
+        ["Faserviricetes", "https://drive.google.com/drive/folders/1Docwdob4ah_8uFcKEjHd6WLHtVeWnC0F?usp=drive_link", "unknown_processed", "--medium", "--small-genomes"],
+        ["Malgrandaviricetes", "https://drive.google.com/drive/folders/1rk-EgdVJwqpDhYVEPDwWL6Rx5h30kceS?usp=drive_link", "unknown_processed", "--medium", "--small-genomes"]
         
     ]
     classes_df = pd.DataFrame(classes_data, columns=["Class", "Unprocessed_url", "Processed_url", "skani_sketch_mode", "skani_dist_mode"])
