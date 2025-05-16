@@ -15,6 +15,7 @@ It currently supports:
 - **Malgrandaviricetes**
 
 In the near future any-contig-to-genus-level functionality will become available for all viruses! 
+
 ---
 
 ## Installation
