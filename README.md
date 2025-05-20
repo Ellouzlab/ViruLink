@@ -142,3 +142,5 @@ To change which taxonomic ranks are predicted, edit the files in
 ## Contact
 
 Muhammad Sulman • <sulmanmu40@gmail.com>
+
+If you have any suggestions for the tool, or need any help, let me know!
