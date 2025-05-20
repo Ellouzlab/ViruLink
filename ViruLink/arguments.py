@@ -80,8 +80,9 @@ def argparser(classes):
     test_parser.add_argument("--database", help="database to process", choices=classes, default=None)
     test_parser.add_argument("--all", help="output directory", action="store_true")
     test_parser.add_argument("--threads", help="number of threads to use", default=cpu_count(), type=int)
-    
-    
+    test_parser.add_argument("--cpu", help="Default to cpu, even if gpu is available", action="store_true")
+    test_parser.add_argument("--swiglu", help="use swiglu activation function (more accurate, but slower). Using without a gpu is painfully slow!", action="store_true")
+
     classify_parser = subparsers.add_parser('classify', help='Classify a sequence')
     classify_parser.add_argument("--database", help="database to use as reference", choices=classes, default=None)
     classify_parser.add_argument("--database_loc", help=f"location of database to process default: {Path.home()}/.cache/ViruLink", default=f"{Path.home()}/.cache/ViruLink")
@@ -98,6 +99,7 @@ def argparser(classes):
         help="weights for calculated with a product of ANI + ANI Frac ONLY USE THIS MODE IF YOU USED IT DURING THE PROCESS COMMAND",
         action="store_true"
     )
+    classify_parser.add_argument("--swiglu", help="use swiglu activation function (more accurate, but slower). Using without a gpu is painfully slow!", action="store_true")
     
     '''Not meant for general use, but for preparations of databases'''
     single_use_parser = subparsers.add_parser('single_use', help='Run a single use script, Not meant for general users')

@@ -363,7 +363,7 @@ def ClassifyHandler(arguments, classes_df):
     LAMBDA_TRI    = 0
     EDGE_ORDER    = ("r1r2", "qr2", "qr1")   # same prediction schedule
     EDGE_PRED_CNT = 3
-
+    act = "relu" if not arguments.swiglu else "swiglu"
     EMBED_DIM = parameters["embedding_dim"]
     COMB_DIM  = EMBED_DIM * 2                # ANI ⨁ HYP embeddings
 
@@ -412,7 +412,7 @@ def ClassifyHandler(arguments, classes_df):
     ld_train = DataLoader(ds_train, BATCH_SIZE, shuffle=True)
     ld_val   = DataLoader(ds_val,   BATCH_SIZE, shuffle=False)
 
-    model = OrdTri(COMB_DIM, K_CLASSES).to(device)
+    model = OrdTri(COMB_DIM, K_CLASSES, act=act).to(device)
     opt   = torch.optim.Adam(model.parameters(), lr=LR)
 
     logging_header("Training OrdTri edge predictor")

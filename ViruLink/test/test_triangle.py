@@ -19,6 +19,7 @@ import pandas as pd
 import torch
 from sklearn.metrics import confusion_matrix
 from torch.utils.data import DataLoader, Dataset
+import torch.nn.functional as F
 
 # ────────────────────── ViruLink imports ──────────────────────
 from ViruLink.setup.score_profile import score_config
@@ -27,7 +28,7 @@ from ViruLink.setup.databases import database_info
 from ViruLink.relations.relationship_edges import build_relationship_edges
 from ViruLink.train.OrdTri import OrdTri
 from ViruLink.train.n2v import n2v
-from ViruLink.train.losses import CUM_TRE_LOSS, _adjacent_probs
+from ViruLink.train.losses import CUM_TRE_LOSS, _adjacent_probs, exp_rank
 from ViruLink.sampler.triangle_sampler import sample_triangles
 from ViruLink.utils import logging_header
 
@@ -38,7 +39,7 @@ BATCH_SIZE = 512
 LR = 1e-3
 NUM_PER_CLASS = 4_000  # triangles per (rank × upper|lower)
 LAMBDA_INT = 1.0
-LAMBDA_TRI = 0.2
+LAMBDA_TRI = 0.3
 EDGE_ORDER = ("r1r2", "qr2", "qr1")   # prediction sequence
 EDGE_PRED_COUNT = 4
 
@@ -48,7 +49,7 @@ COMB_DIM = EMBED_DIM * 2          # after fusing ANI+HYP embeddings
 EVALUATION_METRICS_ENABLED = True
 
 # Device & RNG ————————————————————————————————————————————————
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 torch.manual_seed(RNG_SEED)
 random.seed(RNG_SEED)
 np.random.seed(RNG_SEED)
@@ -190,6 +191,20 @@ def run_epoch(
     collect_cm: bool = False,
     cpu_flag: bool = False,
 ):
+    """
+    Multi-pass training loop inspired by AlphaFold recycling.
+
+    • 1-to-3 passes per batch, chosen uniformly at random  
+    • probabilities are *detached* between passes to stop gradients  
+    • small residual-gate (0.12) mixes new ↔ old probs  
+    • interval + triangle loss applied on **every** pass  
+    • optional monotonic penalty nudges each pass to improve
+    """
+    MAX_RECYCLES = 3          # how many passes we ever do
+    GATE_ALPHA   = 0.12       # σ(-2) ≈ 0.12  → small corrections early on
+    MONO_LAMBDA  = 0.10       # weight of the monotonic regulariser
+    
+
     device_local = torch.device("cuda" if torch.cuda.is_available() and not cpu_flag else "cpu")
     totL = totH = 0.0
     totA = 0.0; n_pt = 0; n = 0
@@ -198,39 +213,79 @@ def run_epoch(
     model.train(opt is not None)
 
     for batch in loader:
+        # ------------------------------------ move to device
         for k in batch:
             batch[k] = batch[k].to(device_local)
         B = batch["eq"].size(0)
 
+        # ------------------------------------ choose #passes for this batch
+        n_passes = random.randint(1, MAX_RECYCLES)
+
+        # running edge-probabilities we’ll recycle between passes
         uniform = torch.full((B, k_classes), 1.0 / k_classes, device=device_local)
         cur_p = {"qr1": uniform.clone(), "qr2": uniform.clone(), "r1r2": uniform.clone()}
-        last_logits = {}
 
-        for _ in range(EDGE_PRED_COUNT):
-            for edge_key in EDGE_ORDER:
-                if edge_key == "qr1":
-                    xa, xb = batch["eq"], batch["ea"]
-                elif edge_key == "qr2":
-                    xa, xb = batch["eq"], batch["eh"]
-                else:
-                    xa, xb = batch["ea"], batch["eh"]
+        pass_losses = []
+        prev_rank = None                      # for the monotonic penalty
+        last_logits = {}                      # to keep the *final* pass’s logits
 
-                probs_vec = torch.cat([cur_p["qr1"], cur_p["qr2"], cur_p["r1r2"]], dim=1)
-                lg = model(xa, xb, batch["edge"], probs_vec)
-                last_logits[edge_key] = lg
-                cur_p[edge_key] = _adjacent_probs(lg)
+        # ========== outer recycle loop ====================================
+        for _pass in range(n_passes):
+            # make a *local* copy we’ll overwrite during this pass
+            local_p = {k: v.clone() for k, v in cur_p.items()}
 
-        la = last_logits["qr1"]; lh = last_logits["qr2"]; lr = last_logits["r1r2"]
-        loss = CUM_TRE_LOSS(la, lh, lr, batch, LAMBDA_INT=LAMBDA_INT, LAMBDA_TRI=LAMBDA_TRI)
+            # one internal refinement cycle (unchanged logic)
+            for _ in range(EDGE_PRED_COUNT):
+                for edge_key in EDGE_ORDER:
+                    if edge_key == "qr1":
+                        xa, xb = batch["eq"], batch["ea"]
+                    elif edge_key == "qr2":
+                        xa, xb = batch["eq"], batch["eh"]
+                    else:
+                        xa, xb = batch["ea"], batch["eh"]
 
+                    probs_vec = torch.cat(
+                        [local_p["qr1"], local_p["qr2"], local_p["r1r2"]], dim=1
+                    )
+                    lg = model(xa, xb, batch["edge"], probs_vec)
+                    last_logits[edge_key] = lg
+                    local_p[edge_key] = _adjacent_probs(lg)        # update in-pass
+
+            # ---------- loss for this pass --------------------------------
+            la = last_logits["qr1"]; lh = last_logits["qr2"]; lr = last_logits["r1r2"]
+            L = CUM_TRE_LOSS(la, lh, lr, batch)
+
+            # monotonic “don’t get worse” penalty
+            rank_now = exp_rank(la, k_classes)
+            if prev_rank is not None:
+                mono = F.relu(prev_rank - rank_now).pow(2).mean()
+                L = L + MONO_LAMBDA * mono
+            prev_rank = rank_now.detach()
+
+            pass_losses.append(L)
+
+            # ---------- recycle probs with a residual gate ----------------
+            for k in cur_p:
+                cur_p[k] = (GATE_ALPHA * local_p[k].detach() +
+                            (1.0 - GATE_ALPHA) * cur_p[k])
+
+        # ======= end recycle loop ========================================
+
+        # average loss over the passes
+        loss = torch.stack(pass_losses).mean()
+
+        # optimise --------------------------------------------------------
         if opt:
-            opt.zero_grad(); loss.backward(); opt.step()
+            opt.zero_grad()
+            loss.backward()
+            opt.step()
 
-        hit = interval_hit_rate(la, batch["lqa"])
+        # metrics on the *final* pass -------------------------------------
+        hit = interval_hit_rate(last_logits["qr1"], batch["lqa"])
         mask = batch["lqa"][:, 0] == batch["lqa"][:, 1]
         p_cnt = mask.sum().item()
         if p_cnt:
-            preds = torch.argmax(_adjacent_probs(la[mask]), 1)
+            preds = torch.argmax(_adjacent_probs(last_logits["qr1"][mask]), 1)
             acc = (preds == batch["lqa"][mask, 0]).float().mean().item()
             totA += acc * p_cnt; n_pt += p_cnt
             if collect_cm:
@@ -239,6 +294,7 @@ def run_epoch(
 
         totL += loss.item() * B; totH += hit * B; n += B
 
+    # confusion-matrix & summary stats ------------------------------------
     cm = (
         confusion_matrix(tbuf, pbuf, labels=list(range(k_classes))) if tbuf else None
     )
@@ -277,11 +333,14 @@ def compute_eval_cm_metrics(cm: np.ndarray, labels: List[str], nr_code: int):
 # ────────────────────── main routine for one database ──────────────────────
 
 def DatabaseTesting(args, db: str):
+    device = torch.device("cuda" if torch.cuda.is_available() and not args.cpu else "cpu")
+
     # ---------------- per-database rank helpers ----------------
     lvl2rank = {lvl: r for r, lvl in enumerate(score_config[db])}
     k_classes = max(lvl2rank.values()) + 1
     nr_code = lvl2rank["NR"]
     RESCALE_ANI = False
+    act = "relu" if not args.swiglu else "swiglu"
 
     # Patch the global symbols **so the helper functions see them**
     global K_CLASSES, NR_CODE
@@ -342,18 +401,19 @@ def DatabaseTesting(args, db: str):
     ds = {k: TriDS(tris[k], emb, ani, hyp) for k in tris}
     ld = {k: DataLoader(ds[k], BATCH_SIZE, shuffle=(k == "train")) for k in tris}
 
-    model = OrdTri(COMB_DIM, k_classes).to(device)
+    model = OrdTri(COMB_DIM, k_classes, act=act).to(device)
     opt = torch.optim.Adam(model.parameters(), lr=LR)
 
     logging_header("Training Edge Predictor")
+    logging.info(f"Utilizing {device} for training!")
     for ep in range(1, EPOCHS + 1):
-        trL, trH, trA, _ = run_epoch(model, ld["train"], k_classes, nr_code, opt)
-        vaL, vaH, vaA, _ = run_epoch(model, ld["val"], k_classes, nr_code)
+        trL, trH, trA, _ = run_epoch(model, ld["train"], k_classes, nr_code, opt, cpu_flag=args.cpu)
+        vaL, vaH, vaA, _ = run_epoch(model, ld["val"], k_classes, nr_code, cpu_flag=args.cpu)
         logging.info("Ep%02d  train L=%.3f hit=%.3f acc=%.3f   val L=%.3f hit=%.3f acc=%.3f",
                      ep, trL, trH, trA, vaL, vaH, vaA)
 
     # Final evaluation
-    results = {k: run_epoch(model, ld[k], k_classes, nr_code, collect_cm=True) for k in ("train", "val", "test")}
+    results = {k: run_epoch(model, ld[k], k_classes, nr_code, collect_cm=True, cpu_flag=args.cpu) for k in ("train", "val", "test")}
     levels = list(score_config[db])[:k_classes]
 
     for split, (_, _, _, CM) in results.items():
