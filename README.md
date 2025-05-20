@@ -125,8 +125,8 @@ Classification times hover around 30s (except Caudoviricetes, which is closer to
 
 | Database type | RAM needed | GPU benefit |
 |---------------|-----------:|-------------|
-| RNA viruses   | ~2 GB      | Minor speed‑up (optional) |
-| DNA viruses   | ~8 GB      | Minor speed‑up (optional) |
+| RNA viruses   | ~2 GB      | Minor speed‑up (major if swiglu) |
+| DNA viruses   | ~8 GB      | Minor speed‑up (major if swiglu) |
 
 > **Note:** ViruLink is currently **Linux‑only**. Windows and macOS support will arrive in the coming weeks.
 
