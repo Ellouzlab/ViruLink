@@ -71,10 +71,6 @@ def exp_rank_cum(logits: torch.Tensor, K_CLASSES: int | None = None) -> torch.Te
     return (p * idx).sum(1)
 
 
-
-# ─────────────────────────────────────────────────────────────────────
-# 3.  Ultrametric triangle loss
-# ─────────────────────────────────────────────────────────────────────
 def ultra_tri_loss(la: torch.Tensor,
                    lh: torch.Tensor,
                    lr: torch.Tensor) -> torch.Tensor:
@@ -98,10 +94,6 @@ def ultra_tri_loss(la: torch.Tensor,
 
     return (eq_loss + ord_loss).mean()
 
-
-# ─────────────────────────────────────────────────────────────────────
-# 4.  Combined loss
-# ─────────────────────────────────────────────────────────────────────
 def CUM_TRE_LOSS(la: torch.Tensor,
                  lh: torch.Tensor,
                  lr: torch.Tensor,
