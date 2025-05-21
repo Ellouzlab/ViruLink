@@ -2,10 +2,6 @@
 """
 Ordinal-relationship prediction with interval-censored losses
 Triangle sampler + Node2Vec embeddings + raw ANI/HYP edge features.
-This version fixes all hard-coded rank constants so that it works for **any**
-virus class in `score_profile`.  The per-database parameters (`K_CLASSES`,
-`NR_CODE`, …) are recomputed inside `DatabaseTesting`, and the global symbols
-that the helper functions expect are patched at runtime.
 """
 from __future__ import annotations
 
@@ -21,7 +17,7 @@ from sklearn.metrics import confusion_matrix
 from torch.utils.data import DataLoader, Dataset
 import torch.nn.functional as F
 
-# ────────────────────── ViruLink imports ──────────────────────
+# ViruLink imports
 from ViruLink.setup.score_profile import score_config
 from ViruLink.setup.run_parameters import parameters
 from ViruLink.setup.databases import database_info
@@ -32,7 +28,7 @@ from ViruLink.train.losses import CUM_TRE_LOSS, _adjacent_probs, exp_rank
 from ViruLink.sampler.triangle_sampler import sample_triangles
 from ViruLink.utils import logging_header
 
-# ────────────────────── static hyper-parameters ──────────────────────
+# hyper-parameters
 RNG_SEED = 42
 EPOCHS = 10
 BATCH_SIZE = 512
@@ -48,14 +44,13 @@ COMB_DIM = EMBED_DIM * 2          # after fusing ANI+HYP embeddings
 
 EVALUATION_METRICS_ENABLED = True
 
-# Device & RNG ————————————————————————————————————————————————
+# Device and RNG
 
 torch.manual_seed(RNG_SEED)
 random.seed(RNG_SEED)
 np.random.seed(RNG_SEED)
 
-# ────────────────────── utility helpers ──────────────────────
-
+# utility helpers
 def remove_version(df: pd.DataFrame) -> pd.DataFrame:
     for col in ("source", "target"):
         df[col] = df[col].str.split(".").str[0]
@@ -98,7 +93,7 @@ def build_rel_bounds(meta_df: pd.DataFrame, rel_scores: Dict[str, int]) -> pd.Da
     )
 
 
-# ────────────────────── triangle sampler wrapper ──────────────────────
+# triangle sampler wrapper
 
 def sample_intra_split_triangles(
     nodes: List[str],
@@ -108,7 +103,7 @@ def sample_intra_split_triangles(
     threads: int,
     seed: int = RNG_SEED,
 ) -> List[Tuple]:
-    """Call the C++/OpenMP triangle sampler."""
+    """call the cpp triangle sampler."""
     return sample_triangles(
         nodes,
         rel_df["source"].tolist(),
@@ -122,7 +117,7 @@ def sample_intra_split_triangles(
     )
 
 
-# ────────────────────── PyTorch dataset ──────────────────────
+# PyTorch dataset
 class TriDS(Dataset):
     def __init__(
         self,
@@ -174,7 +169,7 @@ class TriDS(Dataset):
         }
 
 
-# ────────────────────── training/validation helpers ──────────────────────
+# training/val helpers
 
 def interval_hit_rate(logits: torch.Tensor, bounds: torch.Tensor) -> float:
     pred = torch.argmax(_adjacent_probs(logits), dim=1)
@@ -192,16 +187,16 @@ def run_epoch(
     cpu_flag: bool = False,
 ):
     """
-    Multi-pass training loop inspired by AlphaFold recycling.
+    Multipass training loop inspired by AlphaFold recycling.
 
-    • 1-to-3 passes per batch, chosen uniformly at random  
-    • probabilities are *detached* between passes to stop gradients  
-    • small residual-gate (0.12) mixes new ↔ old probs  
-    • interval + triangle loss applied on **every** pass  
-    • optional monotonic penalty nudges each pass to improve
+    - 1-to-3 passes per batch, chosen uniformly at random  
+    - probabilities are detached between passes to stop gradients  
+    - small residual-gate (0.12) mixes new ↔ old probs  
+    - interval + triangle loss applied on **every** pass  
+    - optional monotonic penalty nudges each pass to improve
     """
-    MAX_RECYCLES = 3          # how many passes we ever do
-    GATE_ALPHA   = 0.12       # σ(-2) ≈ 0.12  → small corrections early on
+    MAX_RECYCLES = 3          # num passes
+    GATE_ALPHA   = 0.12       # σ(-2) ≈ 0.12  => small corrections early on
     MONO_LAMBDA  = 0.10       # weight of the monotonic regulariser
     
 
@@ -213,15 +208,15 @@ def run_epoch(
     model.train(opt is not None)
 
     for batch in loader:
-        # ------------------------------------ move to device
+        # move to device
         for k in batch:
             batch[k] = batch[k].to(device_local)
         B = batch["eq"].size(0)
 
-        # ------------------------------------ choose #passes for this batch
+        # choose # of passes for this batch
         n_passes = random.randint(1, MAX_RECYCLES)
 
-        # running edge-probabilities we’ll recycle between passes
+        # running edge-probabilities to recycle between passes
         uniform = torch.full((B, k_classes), 1.0 / k_classes, device=device_local)
         cur_p = {"qr1": uniform.clone(), "qr2": uniform.clone(), "r1r2": uniform.clone()}
 
@@ -229,12 +224,12 @@ def run_epoch(
         prev_rank = None                      # for the monotonic penalty
         last_logits = {}                      # to keep the *final* pass’s logits
 
-        # ========== outer recycle loop ====================================
+        # outer recycle loop
         for _pass in range(n_passes):
-            # make a *local* copy we’ll overwrite during this pass
+            # make a local copy
             local_p = {k: v.clone() for k, v in cur_p.items()}
 
-            # one internal refinement cycle (unchanged logic)
+            # one internal refinement cycle
             for _ in range(EDGE_PRED_COUNT):
                 for edge_key in EDGE_ORDER:
                     if edge_key == "qr1":
@@ -249,13 +244,13 @@ def run_epoch(
                     )
                     lg = model(xa, xb, batch["edge"], probs_vec)
                     last_logits[edge_key] = lg
-                    local_p[edge_key] = _adjacent_probs(lg)        # update in-pass
+                    local_p[edge_key] = _adjacent_probs(lg)
 
-            # ---------- loss for this pass --------------------------------
+            # loss for this pass
             la = last_logits["qr1"]; lh = last_logits["qr2"]; lr = last_logits["r1r2"]
             L = CUM_TRE_LOSS(la, lh, lr, batch)
 
-            # monotonic “don’t get worse” penalty
+            # monotonic don’t get worse penalty
             rank_now = exp_rank(la, k_classes)
             if prev_rank is not None:
                 mono = F.relu(prev_rank - rank_now).pow(2).mean()
@@ -264,23 +259,23 @@ def run_epoch(
 
             pass_losses.append(L)
 
-            # ---------- recycle probs with a residual gate ----------------
+            # recycle probs with a residual gate
             for k in cur_p:
                 cur_p[k] = (GATE_ALPHA * local_p[k].detach() +
                             (1.0 - GATE_ALPHA) * cur_p[k])
 
-        # ======= end recycle loop ========================================
+        # end recycle loop
 
         # average loss over the passes
         loss = torch.stack(pass_losses).mean()
 
-        # optimise --------------------------------------------------------
+        # optimise
         if opt:
             opt.zero_grad()
             loss.backward()
             opt.step()
 
-        # metrics on the *final* pass -------------------------------------
+        # metrics on the final pass
         hit = interval_hit_rate(last_logits["qr1"], batch["lqa"])
         mask = batch["lqa"][:, 0] == batch["lqa"][:, 1]
         p_cnt = mask.sum().item()
@@ -294,7 +289,7 @@ def run_epoch(
 
         totL += loss.item() * B; totH += hit * B; n += B
 
-    # confusion-matrix & summary stats ------------------------------------
+    # confusion-matrix + summary stats
     cm = (
         confusion_matrix(tbuf, pbuf, labels=list(range(k_classes))) if tbuf else None
     )
@@ -330,19 +325,19 @@ def compute_eval_cm_metrics(cm: np.ndarray, labels: List[str], nr_code: int):
     metrics["spearman_rho"] = rho; metrics["kendall_tau"] = tau
     return metrics
 
-# ────────────────────── main routine for one database ──────────────────────
+# main routine
 
 def DatabaseTesting(args, db: str):
     device = torch.device("cuda" if torch.cuda.is_available() and not args.cpu else "cpu")
 
-    # ---------------- per-database rank helpers ----------------
+    # per-database rank helpers
     lvl2rank = {lvl: r for r, lvl in enumerate(score_config[db])}
     k_classes = max(lvl2rank.values()) + 1
     nr_code = lvl2rank["NR"]
     RESCALE_ANI = False
     act = "relu" if not args.swiglu else "swiglu"
 
-    # Patch the global symbols **so the helper functions see them**
+    # Patch the global symbols
     global K_CLASSES, NR_CODE
     K_CLASSES = k_classes; NR_CODE = nr_code
 
@@ -355,7 +350,7 @@ def DatabaseTesting(args, db: str):
     if RESCALE_ANI:
         w = ani_edges["weight"].to_numpy(dtype=float)
         rng = w.max() - w.min()
-        if rng:                               # avoid divide‑by‑zero on degenerate sets
+        if rng:                               # avoid divide‑by‑zero
             ani_edges["weight"] = (w - w.min()) / rng
         else:
             ani_edges["weight"] = 1.0
@@ -442,8 +437,7 @@ def DatabaseTesting(args, db: str):
     logging_header("Finished %s database", db)
 
 
-# ────────────────────── CLI entry point ──────────────────────
-
+# CLI entry point
 def TestHandler(args):
     dbs = database_info()["Class"] if args.all else [args.database]
     for db in dbs:
