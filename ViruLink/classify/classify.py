@@ -233,426 +233,290 @@ def build_rel_bounds(meta_df: pd.DataFrame,
     
     
 
-
-# ────────────────────────── main entry ──────────────────────────
 def ClassifyHandler(arguments, classes_df):
+    """
+    Build graphs, train OrdTri with a held-out validation split (Phase A),
+    show its metrics + confusion matrix, then fine-tune the best checkpoint
+    on the union of train + val (Phase B) before classifying the query
+    sequences.  Neighbour search always uses *all* reference nodes (queries
+    excluded).
+    """
 
-    qids = validate_query(arguments.query)
+    # ───────────────────────────── 0 · housekeeping ─────────────────────────────
+    qids     = validate_query(arguments.query)
     tmp_path = arguments.temp_dir
     os.makedirs(tmp_path, exist_ok=True)
 
-    # ---------- install cleanup hooks ----------
     if not arguments.keep_temp:
-        # run on normal exit
         atexit.register(delete_tmp, tmp_path)
-
-        # run on unhandled exception
         sys.excepthook = make_global_excepthook(tmp_path)
-
-        # run on Ctrl-C or kill <sigterm>
         handler = make_signal_handler(tmp_path)
         for sig in (signal.SIGINT, signal.SIGTERM):
             signal.signal(sig, handler)
 
-    # ---------- Part 1 – add query to graphs ----------
-    # Setup
+    # ───────────────────────────── 1 · graph construction ───────────────────────
     logging_header("Adding query sequences to HYP graph")
-    database_parameter = database_info()
-    paths_to_unprocs = get_paths_dict(arguments.database_loc, classes_df)
-    VOGDB_path = paths_to_unprocs["VOGDB"]
+    db_params  = database_info()
+    paths      = get_paths_dict(arguments.database_loc, classes_df)
+    VOGDB_path = paths["VOGDB"]
     class_data = arguments.database
-    meta = pd.read_csv(f"{arguments.database_loc}/{class_data}/{class_data}.csv")
-    print(meta)
-    
-    # Blast against VOGDB
-    logging.info("blasting query against VOGDB")
-    VOGDB_dmnd = generate_database("VOGDB", VOGDB_path)
-    m8_file = DiamondSearchDB(
-        VOGDB_dmnd,
-        arguments.query,
-        tmp_path,
-        threads=arguments.threads,
-        force=True
-    )
-    # Process m8 file
-    db_edge_list_path = f"{arguments.database_loc}/{class_data}/edge_list.txt"
 
-    # generate presence/absence matrix
-    pa_query = m8_processor(m8_file, class_data, arguments.eval, arguments.bitscore)
-    pa_db = edge_list_to_presence_absence(db_edge_list_path)
-    merged_pa = merge_presence_absence(pa_query, pa_db)
-    no_proteins_genomes = pa_query.index[(pa_query == 0).all(axis=1)].tolist() # For the user
-    
-    
-    # calculate hypergeometric edges
+    meta = pd.read_csv(f"{arguments.database_loc}/{class_data}/{class_data}.csv")
+
+    # 1.a  HYPERGEOMETRIC graph --------------------------------------------------
+    VOGDB_dmnd = generate_database("VOGDB", VOGDB_path)
+    m8_file    = DiamondSearchDB(VOGDB_dmnd, arguments.query, tmp_path,
+                                 threads=arguments.threads, force=True)
+
+    db_edge_txt = f"{arguments.database_loc}/{class_data}/edge_list.txt"
+    pa_query    = m8_processor(m8_file, class_data, arguments.eval, arguments.bitscore)
+    pa_db       = edge_list_to_presence_absence(db_edge_txt)
+    merged_pa   = merge_presence_absence(pa_query, pa_db)
+
     w_mat = compute_hypergeom_weights(merged_pa, arguments.threads)
-    sources, destinations, weights = create_graph(w_mat, threshold=0.0)
-    hyp = pd.DataFrame({"source": sources, "target": destinations, "weight": weights})
-    
-    # ANI graph building
+    src, dst, wts = create_graph(w_mat, threshold=0.0)
+    hyp = pd.DataFrame({"source": src, "target": dst, "weight": wts})
+
+    # 1.b  ANI graph -------------------------------------------------------------
     logging_header("Adding query sequences to ANI graph")
-    query_ANI_sketch_folder = f"{tmp_path}/ANI_sketch"
-    db_ANI_sketch_folder = f"{arguments.database_loc}/{class_data}/ANI_sketch"
-    
-    # Get modes
-    skani_parameters = database_parameter[database_parameter["Class"]==class_data]
-    skani_sketch_mode = skani_parameters["skani_sketch_mode"].values[0]
-    skani_dist_mode = skani_parameters["skani_dist_mode"].values[0]
-    
-    # Get/generate sketches
-    query_sketch_paths_txt = CreateANISketchFolder(arguments.query, query_ANI_sketch_folder, arguments.threads, skani_sketch_mode)
-    db_sketch_paths_txt = f"{db_ANI_sketch_folder}/sketches.txt"
-    
-    db_ANI_edges_path = f"{arguments.database_loc}/{class_data}/self_ANI.tsv"
-    query_db_ANI_edges_path = f"{tmp_path}/query_db_ANI.tsv"
-    query_db_ANI_edges = ANIDist(
-        query_sketch_paths_txt,
-        db_sketch_paths_txt,
-        query_db_ANI_edges_path,
-        arguments.threads,
-        skani_dist_mode,
-        False,
-        arguments.ANI_FRAC_weights
-    )
-    query_self_ANI_edges = ANIDist(
-        query_sketch_paths_txt,
-        query_sketch_paths_txt,
-        f"{tmp_path}/self_ANI.tsv",
-        arguments.threads,
-        skani_dist_mode,
-        False,
-        arguments.ANI_FRAC_weights
-    )
-    
-    logging_header("Completing ANI Graph")
-    # Read the edges
-    db_ANI_edges = pd.read_csv(db_ANI_edges_path, sep="\t")
-    ani = pd.concat(
-        [
-            db_ANI_edges,
-            query_db_ANI_edges,
-            query_self_ANI_edges
-        ]
-    )
-    
-    logging_header("Running Node2vec")
+    q_sk_dir  = f"{tmp_path}/ANI_sketch"
+    db_sk_dir = f"{arguments.database_loc}/{class_data}/ANI_sketch"
+    skp         = db_params[db_params["Class"] == class_data]
+    sketch_mode = skp["skani_sketch_mode"].iat[0]
+    dist_mode   = skp["skani_dist_mode"].iat[0]
+
+    q_sk_txt  = CreateANISketchFolder(arguments.query, q_sk_dir,
+                                      arguments.threads, sketch_mode)
+    db_sk_txt = f"{db_sk_dir}/sketches.txt"
+
+    db_ani_path   = f"{arguments.database_loc}/{class_data}/self_ANI.tsv"
+    q_db_ani_path = f"{tmp_path}/query_db_ANI.tsv"
+
+    q_db_edges   = ANIDist(q_sk_txt, db_sk_txt, q_db_ani_path,
+                           arguments.threads, dist_mode, False,
+                           arguments.ANI_FRAC_weights)
+    q_self_edges = ANIDist(q_sk_txt, q_sk_txt, f"{tmp_path}/self_ANI.tsv",
+                           arguments.threads, dist_mode, False,
+                           arguments.ANI_FRAC_weights)
+
+    logging_header("Completing ANI graph")
+    ani = pd.concat([pd.read_csv(db_ani_path, sep="\t"), q_db_edges, q_self_edges])
+
+    # 1.c  Node2Vec embeddings ---------------------------------------------------
     ani = process_graph(remove_version(ani))
     hyp = process_graph(remove_version(hyp))
-    ani_emb = n2v(ani,arguments.threads, parameters)
-    hyp_emb = n2v(hyp,arguments.threads, parameters)
-    emb = fuse_emb(ani_emb, hyp_emb)
-    nodes_in_graphs = emb.keys()
-    
-    qids_conversion_dict = {x.split('.')[0]: x for x in qids}
-    nodes_in_graphs = [x for x in nodes_in_graphs if x not in qids_conversion_dict.keys()]
-    
+    ani_emb = n2v(ani, arguments.threads, parameters)
+    hyp_emb = n2v(hyp, arguments.threads, parameters)
+    emb     = fuse_emb(ani_emb, hyp_emb)
+
+    qids_nover = {x.split('.')[0] for x in qids}
+    nodes_in_graphs = [n for n in emb if n not in qids_nover]
+
     meta = meta.loc[meta["Accession"].isin(nodes_in_graphs)]
-    rel = build_rel_bounds(meta, score_config[class_data])
-    
-    
-    
-    
-    # ───────────────────── train OrdTri on 90 / 10 split ─────────────────────
-    # hyper-parameters copied verbatim from test_triangle.py
-    RNG_SEED      = 42
-    EPOCHS        = 10
-    BATCH_SIZE    = 512
-    LR            = 1e-3
+    rel  = build_rel_bounds(meta, score_config[class_data])
+
+    # ───────────────────────────── 2 · OrdTri training ──────────────────────────
+    RNG_SEED, EPOCHS, BATCH, LR = 42, 10, 512, 1e-3
     NUM_PER_CLASS = 4000
-    LAMBDA_INT    = 1.0
-    LAMBDA_TRI    = 0
-    EDGE_ORDER    = ("r1r2", "qr2", "qr1")   # same prediction schedule
-    EDGE_PRED_CNT = 3
+    EDGE_ORDER, EDGE_PRED_CNT = ("r1r2", "qr2", "qr1"), 3
     act = "relu" if not arguments.swiglu else "swiglu"
-    EMBED_DIM = parameters["embedding_dim"]
-    COMB_DIM  = EMBED_DIM * 2                # ANI ⨁ HYP embeddings
+    EMBED_DIM = parameters["embedding_dim"]; COMB_DIM = EMBED_DIM * 2
 
     device = torch.device("cuda" if torch.cuda.is_available() and not arguments.cpu else "cpu")
-    logging.info("Using device: %s", device)
-    logging.info("Using %d threads", arguments.threads)
-    torch.manual_seed(RNG_SEED)
-    np.random.seed(RNG_SEED)
-    random.seed(RNG_SEED)
+    torch.manual_seed(RNG_SEED); np.random.seed(RNG_SEED); random.seed(RNG_SEED)
 
-    # rank helpers (flexible to any score_config edits)
     LEVEL2RANK = {lvl: r for r, lvl in enumerate(score_config[class_data])}
     K_CLASSES  = max(LEVEL2RANK.values()) + 1
     RANK2LEVEL = {r: lvl for lvl, r in LEVEL2RANK.items()}
     NR_CODE    = LEVEL2RANK["NR"]
 
-    # split DB nodes (queries are excluded)
-    all_nodes = list(nodes_in_graphs)
-    random.shuffle(all_nodes)
+    all_nodes = nodes_in_graphs.copy(); random.shuffle(all_nodes)
     cut = int(0.9 * len(all_nodes))
     train_nodes, val_nodes = all_nodes[:cut], all_nodes[cut:]
 
-    edges_train = rel[rel["source"].isin(train_nodes) &
-                    rel["target"].isin(train_nodes)].reset_index(drop=True)
-    edges_val   = rel[rel["source"].isin(val_nodes) &
-                    rel["target"].isin(val_nodes)].reset_index(drop=True)
-
-    def _sample(nodes, rel_df, n_per_cls, threads):
+    def _sample(nodes, ncls):
         return sample_triangles(
             nodes,
-            rel_df["source"].tolist(),
-            rel_df["target"].tolist(),
-            rel_df["lower"].astype("uint8").tolist(),
-            rel_df["upper"].astype("uint8").tolist(),
-            n_per_cls,
-            K_CLASSES,
-            threads,
-            RNG_SEED
+            rel["source"].tolist(),
+            rel["target"].tolist(),
+            rel["lower"].astype("uint8").tolist(),
+            rel["upper"].astype("uint8").tolist(),
+            ncls, K_CLASSES, arguments.threads, RNG_SEED
         )
 
-    tri_train = _sample(train_nodes, edges_train, NUM_PER_CLASS, arguments.threads)
-    tri_val   = _sample(val_nodes,   edges_val,   NUM_PER_CLASS // 4, arguments.threads)
-
-    ds_train = TriDS(tri_train, emb, ani, hyp)
-    ds_val   = TriDS(tri_val,   emb, ani, hyp)
-    ld_train = DataLoader(ds_train, BATCH_SIZE, shuffle=True)
-    ld_val   = DataLoader(ds_val,   BATCH_SIZE, shuffle=False)
+    # —— Phase A : train on 90 %, validate on 10 % —————————
+    tri_train, tri_val = _sample(train_nodes, NUM_PER_CLASS), _sample(val_nodes, NUM_PER_CLASS // 4)
+    ds_train, ds_val   = TriDS(tri_train, emb, ani, hyp), TriDS(tri_val, emb, ani, hyp)
+    ld_train = DataLoader(ds_train, BATCH, shuffle=True)
+    ld_val   = DataLoader(ds_val,   BATCH, shuffle=False)
 
     model = OrdTri(COMB_DIM, K_CLASSES, act=act).to(device)
     opt   = torch.optim.Adam(model.parameters(), lr=LR)
 
-    logging_header("Training OrdTri edge predictor")
+    BEST_PATH = f"{tmp_path}/best_val.pt"
+    best_valL = float("inf")
+
+    logging_header("Phase A – training with held-out validation")
     for ep in range(1, EPOCHS + 1):
-        trL, trH, trA, _ = run_epoch(
-            model, ld_train,
-            K_CLASSES,           # total number of rank levels
-            NR_CODE,             # index of the “NR” level
-            opt,
-            cpu_flag=arguments.cpu)
-        vaL, vaH, vaA, _ = run_epoch(model, ld_val, K_CLASSES, NR_CODE, cpu_flag=arguments.cpu)
+        trL, trH, trA, _ = run_epoch(model, ld_train, K_CLASSES, NR_CODE, opt,
+                                     cpu_flag=arguments.cpu)
+        vaL, vaH, vaA, _ = run_epoch(model, ld_val,   K_CLASSES, NR_CODE,
+                                     cpu_flag=arguments.cpu)
         logging.info(
-            "Ep%02d  train L=%.3f hit=%.3f acc=%.3f   val L=%.3f hit=%.3f acc=%.3f",
+            "Ep%02d  train L=%.3f hit=%.3f acc=%.3f   "
+            "val L=%.3f hit=%.3f acc=%.3f",
             ep, trL, trH, trA, vaL, vaH, vaA
         )
+        if vaL < best_valL:
+            best_valL = vaL
+            torch.save(model.state_dict(), BEST_PATH)
 
-    # ─────────── confusion matrix for point-label edges (val) ───────────
-    _, _, _, val_cm = run_epoch(model, ld_val, K_CLASSES, NR_CODE,
+    # Confusion matrix on held-out validation
+    _, _, _, cm = run_epoch(model, ld_val, K_CLASSES, NR_CODE,
                             collect_cm=True, cpu_flag=arguments.cpu)
-    if val_cm is not None:
+    if cm is not None:
         levels = list(score_config[class_data])
-        logging_header("VALIDATION CONFUSION MATRIX  (point-label edges only)")
-        print(pd.DataFrame(val_cm, index=levels, columns=levels).to_string())
-    # ─────────────────────────────────────────────────────────────────────
-    
-    # ─────────── helpers for reconciliation ───────────
-    UNKNOWN_TOKENS = {"", "nan", "na", "unknown"}
+        logging_header("VALIDATION CONFUSION MATRIX  (held-out)")
+        logging.info(pd.DataFrame(cm, index=levels, columns=levels).to_string())
 
-    def _is_unknown(val) -> bool:
-        """True if *val* is missing or any flavour of ‘unknown’."""
-        if pd.isna(val):
-            return True
-        return str(val).strip().lower() in UNKNOWN_TOKENS
+    # —— Phase B : fine-tune on full set ————————————————
+    logging_header("Phase B – fine-tuning on train + val")
+    model.load_state_dict(torch.load(BEST_PATH))
+    opt = torch.optim.Adam(model.parameters(), lr=LR * 0.1)   # tiny LR
 
-    def _first_known(*vals):
-        """Return the first non-unknown value (or '' if none)."""
-        for v in vals:
-            if not _is_unknown(v):
-                return v
-        return ""
+    train_nodes = val_nodes = all_nodes                       # union
+    tri_full    = _sample(all_nodes, NUM_PER_CLASS)
+    ld_full     = DataLoader(TriDS(tri_full, emb, ani, hyp),
+                             BATCH, shuffle=True)
 
-    def _reconcile_taxa(row1: pd.Series,
-                        row2: pd.Series,
-                        starting_rank: int) -> int:
-        """
-        Walk *up* the taxonomy until the two neighbours agree (ignoring unknowns).
+    for ep in range(1, 4):   # a few fine-tune epochs
+        trL, trH, trA, _ = run_epoch(model, ld_full, K_CLASSES, NR_CODE, opt,
+                                     cpu_flag=arguments.cpu)
+        logging.info("Full-fit Ep%02d  L=%.3f hit=%.3f acc=%.3f", ep, trL, trH, trA)
 
-        Parameters
-        ----------
-        row1, row2 : taxonomy rows for the two reference viruses
-        starting_rank : numeric rank picked by OrdTri (e.g. species = 4)
-
-        Returns
-        -------
-        int
-            The reconciled rank (may be == starting_rank if no conflict).
-        """
-        # ranks are ordered broad → specific in score_config
-        levels = list(score_config[class_data])          # e.g. ["family","genus","species"]
-        for r in range(starting_rank, -1, -1):           # walk species → genus → …
-            lvl = levels[r]
-            v1, v2 = row1.get(lvl, ""), row2.get(lvl, "")
-            if _is_unknown(v1) or _is_unknown(v2) or v1 == v2:
-                return r                                 # match (or unknown) ⇒ stop here
-        return 0                                         # fall back to top level
-
-
-
-
-    # edge-weight LUTs for fast lookup
+    # ───────────────────────────── 3 · helper LUTs & adjacency ────────────────
     def _lut(df):
         d = {}
         for s, t, w in df[["source", "target", "weight"]].itertuples(False):
-            d[(s, t)] = w
-            d[(t, s)] = w
+            d[(s, t)] = w; d[(t, s)] = w
         return d
-    ani_w = _lut(ani)
-    hyp_w = _lut(hyp)
+    ani_w, hyp_w = _lut(ani), _lut(hyp)
 
-    def _top_neighbours(weight_tbl, q, banned, k=2):
-        """
-        Return up to *k* distinct neighbours of q with largest weight.
-        Self-loops and any node in *banned* are ignored.
-        """
-        scores = {}
-        for (u, v), w in weight_tbl.items():
-            if u == q and v not in banned and v != q:
-                scores[v] = max(scores.get(v, -1.0), w)
-            elif v == q and u not in banned and u != q:
-                scores[u] = max(scores.get(u, -1.0), w)
-        # sort once → highest weight first
-        return sorted(scores, key=scores.get, reverse=True)[:k]
-    def _edge_vec(a, b):
-        return torch.tensor([
-            ani_w.get((a, b), 0.0), hyp_w.get((a, b), 0.0)
-        ], dtype=torch.float32, device=device).repeat(3)  # expands to 6 elems
+    def build_adj(tbl, k=10):
+        adj = {}
+        for (u, v), w in tbl.items():
+            if u != v:
+                adj.setdefault(u, []).append((w, v))
+                adj.setdefault(v, []).append((w, u))
+        return {n: [v for w, v in sorted(lst, key=lambda x: (-x[0], x[1]))[:k]]
+                for n, lst in adj.items()}
+    adj_hyp, adj_ani = build_adj(hyp_w), build_adj(ani_w)
+
+    def _top_neigh(adj, q, banned, k=2):
+        return [n for n in adj.get(q, []) if n not in banned][:k]
 
     def _predict(q, r1, r2):
-        """
-        Return (rank1, prob1, rank2, prob2) for edges q-r1 and q-r2.
-        """
         model.eval()
         with torch.no_grad():
-            eq = torch.tensor(emb[q],  dtype=torch.float32, device=device)
-            ea = torch.tensor(emb[r1], dtype=torch.float32, device=device)
-            eh = torch.tensor(emb[r2], dtype=torch.float32, device=device)
-
+            eq, ea, eh = (torch.tensor(emb[n], dtype=torch.float32, device=device)
+                          for n in (q, r1, r2))
             edge = torch.tensor([
-                ani_w.get((q,  r1), 0.0), hyp_w.get((q,  r1), 0.0),
-                ani_w.get((q,  r2), 0.0), hyp_w.get((q,  r2), 0.0),
-                ani_w.get((r1, r2), 0.0), hyp_w.get((r1, r2), 0.0)
+                ani_w.get((q,r1),0.0), hyp_w.get((q,r1),0.0),
+                ani_w.get((q,r2),0.0), hyp_w.get((q,r2),0.0),
+                ani_w.get((r1,r2),0.0), hyp_w.get((r1,r2),0.0)
             ], dtype=torch.float32, device=device)
-
-            # uniform priors
             U = torch.full((1, K_CLASSES), 1.0 / K_CLASSES, device=device)
-            cur_p = {"qr1": U.clone(), "qr2": U.clone(), "r1r2": U.clone()}
-
+            cur = {"qr1": U.clone(), "qr2": U.clone(), "r1r2": U.clone()}
             for _ in range(EDGE_PRED_CNT):
                 for key in EDGE_ORDER:
-                    if key == "qr1":   xa, xb = eq.unsqueeze(0), ea.unsqueeze(0)
-                    elif key == "qr2": xa, xb = eq.unsqueeze(0), eh.unsqueeze(0)
-                    else:              xa, xb = ea.unsqueeze(0), eh.unsqueeze(0)
+                    xa, xb = (eq, ea) if key=="qr1" else (eq, eh) if key=="qr2" else (ea, eh)
+                    lg = model(xa.unsqueeze(0), xb.unsqueeze(0),
+                               edge.unsqueeze(0),
+                               torch.cat([cur["qr1"], cur["qr2"], cur["r1r2"]], 1))
+                    cur[key] = _adjacent_probs(lg)
+            r1_rank = int(torch.argmax(cur["qr1"])); r2_rank = int(torch.argmax(cur["qr2"]))
+            return r1_rank, float(cur["qr1"][0,r1_rank]), \
+                   r2_rank, float(cur["qr2"][0,r2_rank])
 
-                    lg = model(
-                        xa, xb, edge.unsqueeze(0),
-                        torch.cat([cur_p["qr1"], cur_p["qr2"], cur_p["r1r2"]], dim=1)
-                    )
-                    cur_p[key] = _adjacent_probs(lg)
+    UNKNOWN = {"", "nan", "na", "unknown"}
+    def _unk(v): return pd.isna(v) or str(v).strip().lower() in UNKNOWN
 
-            r1_rank = int(torch.argmax(cur_p["qr1"]).item())
-            r2_rank = int(torch.argmax(cur_p["qr2"]).item())
-            r1_prob = float(cur_p["qr1"][0, r1_rank].item())
-            r2_prob = float(cur_p["qr2"][0, r2_rank].item())
-            return r1_rank, r1_prob, r2_rank, r2_prob
+    def _reconcile(row_pick, row_other, rank_pick, rank_other):
+        levels = list(LEVEL2RANK.keys()); r = rank_other
+        while r >= 0:
+            v1, v2 = row_pick.get(levels[r], ""), row_other.get(levels[r], "")
+            if _unk(v1) or _unk(v2) or v1 == v2: break
+            r -= 1
+        return rank_pick if r == rank_other else r
 
-    results = []
-    bad_nodes = set(qids_conversion_dict.keys())  # exclude ALL queries everywhere
+    # ───────────────────────────── 4 · classify each query ────────────────────
+    bad_nodes = {x.split('.')[0] for x in qids}
+    results   = []
 
-    for q_full in qids:                  # keep original id for reporting
-        q = q_full.split(".")[0]         # version-less ID used in graphs
+    for q_full in qids:
+        q = q_full.split('.')[0]
 
-        # candidate lists (grab a few extra in case of ties)
-        hyp_nbrs = _top_neighbours(hyp_w, q, bad_nodes, k=5)
-        ani_nbrs = _top_neighbours(ani_w, q, bad_nodes, k=5)
-
-        # ── pick top-HYP first (if it exists) ──
+        hyp_nbrs = _top_neigh(adj_hyp, q, bad_nodes, 5)
+        ani_nbrs = _top_neigh(adj_ani, q, bad_nodes, 5)
         r_hyp = hyp_nbrs[0] if hyp_nbrs else None
-
-        # ── pick the best ANI neighbour that differs from r_hyp ──
         r_ani = next((n for n in ani_nbrs if n != r_hyp), None)
 
-        # ── fall-back #1 : one list empty → take top-2 from the other ──
         if r_hyp is None and len(ani_nbrs) >= 2:
             r_hyp, r_ani = ani_nbrs[:2]
         elif r_ani is None and len(hyp_nbrs) >= 2:
             r_hyp, r_ani = hyp_nbrs[:2]
 
-        # ── fall-back #2 : still only one unique neighbour → random DB node ──
         if r_hyp is None or r_ani is None or r_hyp == r_ani:
-            pool = [n for n in all_nodes if n not in {q, r_hyp, r_ani} and n not in bad_nodes]
+            pool = [n for n in all_nodes if n not in {q,r_hyp,r_ani} and n not in bad_nodes]
             if pool:
-                if r_hyp is None:
-                    r_hyp = random.choice(pool)
-                else:
-                    r_ani = random.choice(pool)
+                if r_hyp is None: r_hyp = random.choice(pool)
+                else:             r_ani = random.choice(pool)
 
-        # ── final sanity-check ──
         if r_hyp is None or r_ani is None or r_hyp == r_ani:
-            logging.warning("Query %s could not find two distinct neighbours – skipped", q_full)
+            logging.warning("Query %s skipped – neighbours not found", q_full)
             continue
 
-        # the triangle for prediction
-        r1, r2 = r_hyp, r_ani
-        
-              
-        rank1, prob1, rank2, prob2 = _predict(q, r1, r2)
+        rank1, prob1, rank2, prob2 = _predict(q, r_hyp, r_ani)
+        init_rel_1, init_rel_2 = RANK2LEVEL[rank1], RANK2LEVEL[rank2]
 
-        # ------------------------------------------------------------------
-        # new logic that reconciles the two candidate edges
-        # ------------------------------------------------------------------
-        row1 = meta.loc[meta["Accession"] == r1].squeeze()
-        row2 = meta.loc[meta["Accession"] == r2].squeeze()
-
-        # pick the edge OrdTri judged stronger (tie-break by prob)
         if rank1 >= rank2:
-            picked_node, picked_rank, picked_prob = r1, rank1, prob1
+            pick_node, pick_rank, pick_prob = r_hyp, rank1, prob1
+            other_node, other_rank          = r_ani, rank2
         else:
-            picked_node, picked_rank, picked_prob = r2, rank2, prob2
+            pick_node, pick_rank, pick_prob = r_ani, rank2, prob2
+            other_node, other_rank          = r_hyp, rank1
 
-        # ------------------------------------------------------------------
-        # logical reconciliation – no probability tie-breaks
-        # ------------------------------------------------------------------
-        row1, row2 = (
-            meta.loc[meta["Accession"] == r1].squeeze(),
-            meta.loc[meta["Accession"] == r2].squeeze(),
-        )
+        row_pick  = meta.loc[meta["Accession"] == pick_node ].squeeze()
+        row_other = meta.loc[meta["Accession"] == other_node].squeeze()
 
-        # default to r1 unless its taxon is unknown at the final rank
-        initial_pick = r1
-        initial_rank = rank1
-        initial_prob = prob1
+        final_rank = _reconcile(row_pick, row_other, pick_rank, other_rank)
+        final_rel  = RANK2LEVEL[final_rank]
+        out_prob   = pick_prob if final_rank == pick_rank else "LOGIC"
 
-        # compute the reconciled (possibly broader) rank
-        resolved_rank = _reconcile_taxa(row1, row2, min(rank1, rank2))
-
-        # if initial pick is unknown at the resolved rank, switch to r2
-        lvl_name = list(score_config[class_data])[resolved_rank]
-        if _is_unknown(row1.get(lvl_name, "")):
-            initial_pick, initial_rank, initial_prob = r2, rank2, prob2
-
-        picked_node  = initial_pick
-        picked_rank  = resolved_rank
-        picked_prob  = initial_prob if resolved_rank == initial_rank else "LOGIC"
-        # ------------------------------------------------------------------
-
-
-        # taxonomy columns up to the predicted level
-        tax_row = meta.loc[meta["Accession"] == picked_node].squeeze() \
-                  if "Accession" in meta.columns else pd.Series(dtype=str)
         tax_values = {
-            lvl: (tax_row[lvl] if LEVEL2RANK[lvl] <= picked_rank and lvl in tax_row else "")
+            lvl: (row_pick[lvl] if LEVEL2RANK[lvl] <= final_rank and lvl in row_pick else "")
             for lvl in score_config[class_data]
         }
 
         results.append({
-            "query":        q_full,
-            "closest_node": picked_node,
-            "relationship": RANK2LEVEL[picked_rank],
-            "pred_prob":    picked_prob,
+            "query"                       : q_full,
+            "closest_node_1"              : r_hyp,
+            "closest_node_2"              : r_ani,
+            "initial_relationship_node1"  : init_rel_1,
+            "initial_pred_prob_node1"     : prob1,
+            "initial_relationship_node2"  : init_rel_2,
+            "initial_pred_prob_node2"     : prob2,
+            "choice_of_node"              : pick_node,
+            "logical_based_final_relationship" : final_rel,
+            "pred_prob"                   : out_prob,
             **tax_values,
         })
 
-
-
-    classif_df = pd.DataFrame(results)
-    try:
-        classif_df = classif_df.drop("NR", axis=1)
-    except:
-        pass
+    # ───────────────────────────── 5 · output CSV ─────────────────────────────
+    df = pd.DataFrame(results).drop(columns=["NR"], errors="ignore")
     logging_header("Classification results")
-    print(classif_df.to_string(index=False))
-    classif_df.to_csv(arguments.output, index=False)
-        
+    logging.info(df.to_string(index=False))
+    df.to_csv(arguments.output, index=False)
+
+
+
