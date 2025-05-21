@@ -3,7 +3,8 @@ score_config = {
         "NR":0,
         "Order":1,
         "Family":2,
-        "Genus":3
+        "Subfamily":3,
+        "Genus":4
     },
     "Herviviricetes": {
         "NR":0,
