@@ -35,14 +35,14 @@ class OrdTri(nn.Module):
 
         if self.act_name == "relu":
             self.net = nn.Sequential(
-                nn.Linear(in_dim, 128), nn.ReLU(),
-                nn.Linear(128,  64),    nn.ReLU(),
+                nn.Linear(in_dim, 128), nn.ReLU(), nn.Dropout(0.1),
+                nn.Linear(128,  64),    nn.ReLU(), nn.Dropout(0.1),
                 nn.Linear(64, k)                 # cumulative-logit logits
             )
         elif self.act_name == "swiglu":
             self.net = nn.Sequential(
-                nn.Linear(in_dim, 128 * 2), SwiGLU(),     # → 128
-                nn.Linear(128,      64 * 2), SwiGLU(),     # → 64
+                nn.Linear(in_dim, 128 * 2), SwiGLU(), nn.Dropout(0.1),    # → 128
+                nn.Linear(128,      64 * 2), SwiGLU(), nn.Dropout(0.1),     # → 64
                 nn.Linear(64, k)                          # logits
             )
         else:
