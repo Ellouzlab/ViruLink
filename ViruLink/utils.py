@@ -229,7 +229,7 @@ def edge_list_to_presence_absence(edge_list_path):
 
 def compute_hypergeom_weights(pa_matrix: pd.DataFrame,
                               nthreads: int = 1,
-                              pval_thresh: float = 0.01,
+                              pval_thresh: float = 0.1,
                               max_freq: float = 0.80) -> pd.DataFrame:
     """
     Compute the shared-protein weight matrix for all genome pairs.

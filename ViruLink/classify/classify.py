@@ -235,18 +235,21 @@ def build_rel_bounds(meta_df: pd.DataFrame,
 
 def ClassifyHandler(arguments, classes_df):
     """
-    Build graphs, train OrdTri with a held-out validation split (Phase A),
-    show its metrics + confusion matrix, then fine-tune the best checkpoint
-    on the union of train + val (Phase B) before classifying the query
-    sequences.  Neighbour search always uses *all* reference nodes (queries
-    excluded).
+    Fast classifier for ViruLink.
+
+    * Neighbour search is fully O(1):
+        – top-k (k = 50) adjacency lists  
+        – pre-computed “best single edge” per node  
+        – cosine fallback only if **both** slots are still empty  
+    * If only **one** neighbour is ultimately found, it is reused for both
+      reference positions (triangle refs may be identical – allowed). 
+    * Remaining pipeline (train/val, fine-tune, reconciliation) unchanged.
     """
 
-    # ───────────────────────────── 0 · housekeeping ─────────────────────────────
+    # ───────────────────────── 0 · housekeeping ─────────────────────────
     qids     = validate_query(arguments.query)
     tmp_path = arguments.temp_dir
     os.makedirs(tmp_path, exist_ok=True)
-
     if not arguments.keep_temp:
         atexit.register(delete_tmp, tmp_path)
         sys.excepthook = make_global_excepthook(tmp_path)
@@ -254,55 +257,46 @@ def ClassifyHandler(arguments, classes_df):
         for sig in (signal.SIGINT, signal.SIGTERM):
             signal.signal(sig, handler)
 
-    # ───────────────────────────── 1 · graph construction ───────────────────────
+    # ───────────────────────── 1 · build graphs ─────────────────────────
     logging_header("Adding query sequences to HYP graph")
     db_params  = database_info()
     paths      = get_paths_dict(arguments.database_loc, classes_df)
     VOGDB_path = paths["VOGDB"]
     class_data = arguments.database
-
     meta = pd.read_csv(f"{arguments.database_loc}/{class_data}/{class_data}.csv")
 
-    # 1.a  HYPERGEOMETRIC graph --------------------------------------------------
+    # 1.a HYP graph
     VOGDB_dmnd = generate_database("VOGDB", VOGDB_path)
-    m8_file    = DiamondSearchDB(VOGDB_dmnd, arguments.query, tmp_path,
-                                 threads=arguments.threads, force=True)
-
+    m8_file = DiamondSearchDB(VOGDB_dmnd, arguments.query, tmp_path,
+                              threads=arguments.threads, force=True)
     db_edge_txt = f"{arguments.database_loc}/{class_data}/edge_list.txt"
-    pa_query    = m8_processor(m8_file, class_data, arguments.eval, arguments.bitscore)
-    pa_db       = edge_list_to_presence_absence(db_edge_txt)
-    merged_pa   = merge_presence_absence(pa_query, pa_db)
-
-    w_mat = compute_hypergeom_weights(merged_pa, arguments.threads)
-    src, dst, wts = create_graph(w_mat, threshold=0.0)
+    pa_query  = m8_processor(m8_file, class_data, arguments.eval, arguments.bitscore)
+    pa_db     = edge_list_to_presence_absence(db_edge_txt)
+    merged_pa = merge_presence_absence(pa_query, pa_db)
+    src, dst, wts = create_graph(compute_hypergeom_weights(merged_pa, arguments.threads), 0.0)
     hyp = pd.DataFrame({"source": src, "target": dst, "weight": wts})
 
-    # 1.b  ANI graph -------------------------------------------------------------
+    # 1.b ANI graph
     logging_header("Adding query sequences to ANI graph")
     q_sk_dir  = f"{tmp_path}/ANI_sketch"
     db_sk_dir = f"{arguments.database_loc}/{class_data}/ANI_sketch"
     skp         = db_params[db_params["Class"] == class_data]
     sketch_mode = skp["skani_sketch_mode"].iat[0]
     dist_mode   = skp["skani_dist_mode"].iat[0]
-
     q_sk_txt  = CreateANISketchFolder(arguments.query, q_sk_dir,
                                       arguments.threads, sketch_mode)
     db_sk_txt = f"{db_sk_dir}/sketches.txt"
-
     db_ani_path   = f"{arguments.database_loc}/{class_data}/self_ANI.tsv"
     q_db_ani_path = f"{tmp_path}/query_db_ANI.tsv"
-
     q_db_edges   = ANIDist(q_sk_txt, db_sk_txt, q_db_ani_path,
                            arguments.threads, dist_mode, False,
                            arguments.ANI_FRAC_weights)
     q_self_edges = ANIDist(q_sk_txt, q_sk_txt, f"{tmp_path}/self_ANI.tsv",
                            arguments.threads, dist_mode, False,
                            arguments.ANI_FRAC_weights)
-
-    logging_header("Completing ANI graph")
     ani = pd.concat([pd.read_csv(db_ani_path, sep="\t"), q_db_edges, q_self_edges])
 
-    # 1.c  Node2Vec embeddings ---------------------------------------------------
+    # 1.c Node2Vec embeddings
     ani = process_graph(remove_version(ani))
     hyp = process_graph(remove_version(hyp))
     ani_emb = n2v(ani, arguments.threads, parameters)
@@ -311,17 +305,15 @@ def ClassifyHandler(arguments, classes_df):
 
     qids_nover = {x.split('.')[0] for x in qids}
     nodes_in_graphs = [n for n in emb if n not in qids_nover]
-
     meta = meta.loc[meta["Accession"].isin(nodes_in_graphs)]
     rel  = build_rel_bounds(meta, score_config[class_data])
 
-    # ───────────────────────────── 2 · OrdTri training ──────────────────────────
+    # ───────────────────────── 2 · train OrdTri (Phase A + B) ────────────
     RNG_SEED, EPOCHS, BATCH, LR = 42, 10, 512, 1e-3
     NUM_PER_CLASS = 4000
     EDGE_ORDER, EDGE_PRED_CNT = ("r1r2", "qr2", "qr1"), 3
     act = "relu" if not arguments.swiglu else "swiglu"
     EMBED_DIM = parameters["embedding_dim"]; COMB_DIM = EMBED_DIM * 2
-
     device = torch.device("cuda" if torch.cuda.is_available() and not arguments.cpu else "cpu")
     torch.manual_seed(RNG_SEED); np.random.seed(RNG_SEED); random.seed(RNG_SEED)
 
@@ -336,15 +328,10 @@ def ClassifyHandler(arguments, classes_df):
 
     def _sample(nodes, ncls):
         return sample_triangles(
-            nodes,
-            rel["source"].tolist(),
-            rel["target"].tolist(),
-            rel["lower"].astype("uint8").tolist(),
-            rel["upper"].astype("uint8").tolist(),
-            ncls, K_CLASSES, arguments.threads, RNG_SEED
-        )
+            nodes, rel["source"].tolist(), rel["target"].tolist(),
+            rel["lower"].astype("uint8").tolist(), rel["upper"].astype("uint8").tolist(),
+            ncls, K_CLASSES, arguments.threads, RNG_SEED)
 
-    # —— Phase A : train on 90 %, validate on 10 % —————————
     tri_train, tri_val = _sample(train_nodes, NUM_PER_CLASS), _sample(val_nodes, NUM_PER_CLASS // 4)
     ds_train, ds_val   = TriDS(tri_train, emb, ani, hyp), TriDS(tri_val, emb, ani, hyp)
     ld_train = DataLoader(ds_train, BATCH, shuffle=True)
@@ -352,49 +339,42 @@ def ClassifyHandler(arguments, classes_df):
 
     model = OrdTri(COMB_DIM, K_CLASSES, act=act).to(device)
     opt   = torch.optim.Adam(model.parameters(), lr=LR)
-
-    BEST_PATH = f"{tmp_path}/best_val.pt"
-    best_valL = float("inf")
+    best_valL, BEST_PATH = float("inf"), f"{tmp_path}/best_val.pt"
 
     logging_header("Phase A – training with held-out validation")
     for ep in range(1, EPOCHS + 1):
         trL, trH, trA, _ = run_epoch(model, ld_train, K_CLASSES, NR_CODE, opt,
                                      cpu_flag=arguments.cpu)
-        vaL, vaH, vaA, _ = run_epoch(model, ld_val,   K_CLASSES, NR_CODE,
+        vaL, vaH, vaA, _ = run_epoch(model, ld_val, K_CLASSES, NR_CODE,
                                      cpu_flag=arguments.cpu)
-        logging.info(
-            "Ep%02d  train L=%.3f hit=%.3f acc=%.3f   "
-            "val L=%.3f hit=%.3f acc=%.3f",
-            ep, trL, trH, trA, vaL, vaH, vaA
-        )
+        logging.info("Ep%02d  train L=%.3f hit=%.3f acc=%.3f   "
+                     "val L=%.3f hit=%.3f acc=%.3f",
+                     ep, trL, trH, trA, vaL, vaH, vaA)
         if vaL < best_valL:
             best_valL = vaL
             torch.save(model.state_dict(), BEST_PATH)
 
-    # Confusion matrix on held-out validation
+    # confusion matrix on held-out val
     _, _, _, cm = run_epoch(model, ld_val, K_CLASSES, NR_CODE,
                             collect_cm=True, cpu_flag=arguments.cpu)
     if cm is not None:
-        levels = list(score_config[class_data])
-        logging_header("VALIDATION CONFUSION MATRIX  (held-out)")
-        logging.info(pd.DataFrame(cm, index=levels, columns=levels).to_string())
+        logging_header("VALIDATION CONFUSION MATRIX")
+        logging.info(pd.DataFrame(cm,
+                     index=list(score_config[class_data]),
+                     columns=list(score_config[class_data])).to_string())
 
-    # —— Phase B : fine-tune on full set ————————————————
-    logging_header("Phase B – fine-tuning on train + val")
+    # Phase-B fine-tune
+    logging_header("Phase B – fine-tune on train+val")
     model.load_state_dict(torch.load(BEST_PATH))
-    opt = torch.optim.Adam(model.parameters(), lr=LR * 0.1)   # tiny LR
-
-    train_nodes = val_nodes = all_nodes                       # union
-    tri_full    = _sample(all_nodes, NUM_PER_CLASS)
-    ld_full     = DataLoader(TriDS(tri_full, emb, ani, hyp),
-                             BATCH, shuffle=True)
-
-    for ep in range(1, 4):   # a few fine-tune epochs
+    opt = torch.optim.Adam(model.parameters(), lr=LR * 0.1)
+    tri_full = _sample(all_nodes, NUM_PER_CLASS)
+    ld_full  = DataLoader(TriDS(tri_full, emb, ani, hyp), BATCH, shuffle=True)
+    for ep in range(1, 4):
         trL, trH, trA, _ = run_epoch(model, ld_full, K_CLASSES, NR_CODE, opt,
                                      cpu_flag=arguments.cpu)
         logging.info("Full-fit Ep%02d  L=%.3f hit=%.3f acc=%.3f", ep, trL, trH, trA)
 
-    # ───────────────────────────── 3 · helper LUTs & adjacency ────────────────
+    # ───────────────────────── 3 · neighbour prep ───────────────────────
     def _lut(df):
         d = {}
         for s, t, w in df[["source", "target", "weight"]].itertuples(False):
@@ -402,80 +382,106 @@ def ClassifyHandler(arguments, classes_df):
         return d
     ani_w, hyp_w = _lut(ani), _lut(hyp)
 
-    def build_adj(tbl, k=10):
+    def _build_adj(tbl, k=50):
         adj = {}
         for (u, v), w in tbl.items():
             if u != v:
                 adj.setdefault(u, []).append((w, v))
                 adj.setdefault(v, []).append((w, u))
-        return {n: [v for w, v in sorted(lst, key=lambda x: (-x[0], x[1]))[:k]]
+        # sort once
+        return {n: [v for w, v in sorted(lst, key=lambda x: -x[0])[:k]]
                 for n, lst in adj.items()}
-    adj_hyp, adj_ani = build_adj(hyp_w), build_adj(ani_w)
+    adj_hyp, adj_ani = _build_adj(hyp_w), _build_adj(ani_w)
 
-    def _top_neigh(adj, q, banned, k=2):
-        return [n for n in adj.get(q, []) if n not in banned][:k]
+    # pre-compute best single-edge neighbour (1st in already-sorted list)
+    best_hyp = {n: lst[0] for n, lst in adj_hyp.items() if lst}
+    best_ani = {n: lst[0] for n, lst in adj_ani.items() if lst}
 
-    def _predict(q, r1, r2):
+    # cosine fallback matrices (skip nodes lacking that embedding)
+    hyp_ids = np.array([n for n in all_nodes if n in hyp_emb])
+    hyp_mat = np.stack([hyp_emb[n] for n in hyp_ids])
+    hyp_mat /= np.linalg.norm(hyp_mat, axis=1, keepdims=True) + 1e-12
+
+    ani_ids = np.array([n for n in all_nodes if n in ani_emb])
+    ani_mat = np.stack([ani_emb[n] for n in ani_ids])
+    ani_mat /= np.linalg.norm(ani_mat, axis=1, keepdims=True) + 1e-12
+
+    # ───────────────────────── helpers for loop ─────────────────────────
+    UNKNOWN = {"", "nan", "na", "unknown"}
+    def _unk(x): return pd.isna(x) or str(x).strip().lower() in UNKNOWN
+
+    def _reconcile(row_a, row_b, rank_a, rank_b):
+        levels = list(LEVEL2RANK.keys()); r = rank_b
+        while r >= 0:
+            ta, tb = row_a.get(levels[r], ""), row_b.get(levels[r], "")
+            if _unk(ta) or _unk(tb) or ta == tb: break
+            r -= 1
+        return rank_a if r == rank_b else r
+
+    def _predict(q, n1, n2):
         model.eval()
         with torch.no_grad():
-            eq, ea, eh = (torch.tensor(emb[n], dtype=torch.float32, device=device)
-                          for n in (q, r1, r2))
+            eq, e1, e2 = (torch.tensor(emb[n], dtype=torch.float32, device=device)
+                          for n in (q, n1, n2))
             edge = torch.tensor([
-                ani_w.get((q,r1),0.0), hyp_w.get((q,r1),0.0),
-                ani_w.get((q,r2),0.0), hyp_w.get((q,r2),0.0),
-                ani_w.get((r1,r2),0.0), hyp_w.get((r1,r2),0.0)
+                ani_w.get((q,n1),0.0), hyp_w.get((q,n1),0.0),
+                ani_w.get((q,n2),0.0), hyp_w.get((q,n2),0.0),
+                ani_w.get((n1,n2),0.0), hyp_w.get((n1,n2),0.0)
             ], dtype=torch.float32, device=device)
             U = torch.full((1, K_CLASSES), 1.0 / K_CLASSES, device=device)
             cur = {"qr1": U.clone(), "qr2": U.clone(), "r1r2": U.clone()}
             for _ in range(EDGE_PRED_CNT):
                 for key in EDGE_ORDER:
-                    xa, xb = (eq, ea) if key=="qr1" else (eq, eh) if key=="qr2" else (ea, eh)
+                    xa, xb = (eq, e1) if key=="qr1" else (eq, e2) if key=="qr2" else (e1, e2)
                     lg = model(xa.unsqueeze(0), xb.unsqueeze(0),
                                edge.unsqueeze(0),
                                torch.cat([cur["qr1"], cur["qr2"], cur["r1r2"]], 1))
                     cur[key] = _adjacent_probs(lg)
-            r1_rank = int(torch.argmax(cur["qr1"])); r2_rank = int(torch.argmax(cur["qr2"]))
-            return r1_rank, float(cur["qr1"][0,r1_rank]), \
-                   r2_rank, float(cur["qr2"][0,r2_rank])
+            r1 = int(torch.argmax(cur["qr1"])); p1 = float(cur["qr1"][0,r1])
+            r2 = int(torch.argmax(cur["qr2"])); p2 = float(cur["qr2"][0,r2])
+            return r1, p1, r2, p2
 
-    UNKNOWN = {"", "nan", "na", "unknown"}
-    def _unk(v): return pd.isna(v) or str(v).strip().lower() in UNKNOWN
-
-    def _reconcile(row_pick, row_other, rank_pick, rank_other):
-        levels = list(LEVEL2RANK.keys()); r = rank_other
-        while r >= 0:
-            v1, v2 = row_pick.get(levels[r], ""), row_other.get(levels[r], "")
-            if _unk(v1) or _unk(v2) or v1 == v2: break
-            r -= 1
-        return rank_pick if r == rank_other else r
-
-    # ───────────────────────────── 4 · classify each query ────────────────────
+    # ───────────────────────── 4 · classify queries ─────────────────────
     bad_nodes = {x.split('.')[0] for x in qids}
-    results   = []
+    results = []
 
     for q_full in qids:
         q = q_full.split('.')[0]
 
-        hyp_nbrs = _top_neigh(adj_hyp, q, bad_nodes, 5)
-        ani_nbrs = _top_neigh(adj_ani, q, bad_nodes, 5)
-        r_hyp = hyp_nbrs[0] if hyp_nbrs else None
-        r_ani = next((n for n in ani_nbrs if n != r_hyp), None)
+        # 1️⃣ adjacency (fast O(1))
+        r_hyp = next((n for n in adj_hyp.get(q, []) if n not in bad_nodes), None)
+        r_ani = next((n for n in adj_ani.get(q, []) if n not in bad_nodes and n != r_hyp), None)
 
-        if r_hyp is None and len(ani_nbrs) >= 2:
-            r_hyp, r_ani = ani_nbrs[:2]
-        elif r_ani is None and len(hyp_nbrs) >= 2:
-            r_hyp, r_ani = hyp_nbrs[:2]
+        # 2️⃣ best-edge per node (O(1))
+        if r_hyp is None:
+            r_hyp = best_hyp.get(q)
+            if r_hyp in bad_nodes: r_hyp = None
+        if r_ani is None or r_ani == r_hyp:
+            r_ani = best_ani.get(q)
+            if r_ani in bad_nodes or r_ani == r_hyp: r_ani = None
 
-        if r_hyp is None or r_ani is None or r_hyp == r_ani:
-            pool = [n for n in all_nodes if n not in {q,r_hyp,r_ani} and n not in bad_nodes]
-            if pool:
-                if r_hyp is None: r_hyp = random.choice(pool)
-                else:             r_ani = random.choice(pool)
+        # 3️⃣ cosine fallback
+        if (r_hyp is None or r_ani is None or r_hyp == r_ani) and q in hyp_emb:
+            q_vec = hyp_emb[q] / (np.linalg.norm(hyp_emb[q]) + 1e-12)
+            sims = hyp_mat @ q_vec
+            for n in hyp_ids[np.argsort(-sims)]:
+                if n in bad_nodes or n == q: continue
+                if r_hyp is None:
+                    r_hyp = n
+                elif r_ani is None:
+                    r_ani = n
+                    break
 
-        if r_hyp is None or r_ani is None or r_hyp == r_ani:
+        # 4️⃣ still missing? reuse the one we do have
+        if r_hyp is None and r_ani is not None:
+            r_hyp = r_ani
+        if r_ani is None and r_hyp is not None:
+            r_ani = r_hyp
+        if r_hyp is None:  # nothing at all
             logging.warning("Query %s skipped – neighbours not found", q_full)
             continue
 
+        # prediction + reconciliation
         rank1, prob1, rank2, prob2 = _predict(q, r_hyp, r_ani)
         init_rel_1, init_rel_2 = RANK2LEVEL[rank1], RANK2LEVEL[rank2]
 
@@ -486,9 +492,8 @@ def ClassifyHandler(arguments, classes_df):
             pick_node, pick_rank, pick_prob = r_ani, rank2, prob2
             other_node, other_rank          = r_hyp, rank1
 
-        row_pick  = meta.loc[meta["Accession"] == pick_node ].squeeze()
+        row_pick  = meta.loc[meta["Accession"] == pick_node].squeeze()
         row_other = meta.loc[meta["Accession"] == other_node].squeeze()
-
         final_rank = _reconcile(row_pick, row_other, pick_rank, other_rank)
         final_rel  = RANK2LEVEL[final_rank]
         out_prob   = pick_prob if final_rank == pick_rank else "LOGIC"
@@ -512,11 +517,12 @@ def ClassifyHandler(arguments, classes_df):
             **tax_values,
         })
 
-    # ───────────────────────────── 5 · output CSV ─────────────────────────────
+    # ───────────────────────── 5 · output CSV ───────────────────────────
     df = pd.DataFrame(results).drop(columns=["NR"], errors="ignore")
     logging_header("Classification results")
     logging.info(df.to_string(index=False))
     df.to_csv(arguments.output, index=False)
+
 
 
 

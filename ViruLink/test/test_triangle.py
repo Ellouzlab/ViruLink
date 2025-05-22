@@ -339,26 +339,26 @@ def DatabaseTesting(args, db: str):
 
     # Patch the global symbols
     global K_CLASSES, NR_CODE
-    K_CLASSES = k_classes; NR_CODE = nr_code
+    K_CLASSES = k_classes
+    NR_CODE = nr_code
 
     p = Path(args.databases_loc) / db
 
     logging_header("Loading %s database", db)
     ani_edges = remove_version(pd.read_csv(p / "self_ANI.tsv", sep="\t"))
     hyp_edges = remove_version(pd.read_csv(p / "hypergeom_edges.csv"))
-    
+
     if RESCALE_ANI:
         w = ani_edges["weight"].to_numpy(dtype=float)
         rng = w.max() - w.min()
-        if rng:                               # avoid divide‑by‑zero
+        if rng:
             ani_edges["weight"] = (w - w.min()) / rng
         else:
             ani_edges["weight"] = 1.0
-            
+
     ani = process_graph(ani_edges)
     hyp = process_graph(hyp_edges)
-    
-    
+
     logging.info("ANI Graph: %d edges", len(ani))
     logging.info("HYP Graph: %d edges", len(hyp))
 
@@ -368,8 +368,8 @@ def DatabaseTesting(args, db: str):
     emb = fuse_emb(ani_emb, hyp_emb)
     logging.info("Node2vec embeddings generated for %d nodes", len(emb))
 
-    # Split 80/10/10
-    all_nodes = list(emb); random.shuffle(all_nodes)
+    all_nodes = list(emb)
+    random.shuffle(all_nodes)
     c1, c2 = int(.8 * len(all_nodes)), int(.9 * len(all_nodes))
     splits = {"train": all_nodes[:c1], "val": all_nodes[c1:c2], "test": all_nodes[c2:]}
     logging.info("train/val/test sizes: %d/%d/%d", *(len(splits[k]) for k in ("train", "val", "test")))
@@ -377,8 +377,10 @@ def DatabaseTesting(args, db: str):
     logging_header("Loading %s relationships", db)
     meta = pd.read_csv(p / f"{db}.csv")
     rel = build_rel_bounds(meta, score_config[db])
-    edges = {k: rel[rel["source"].isin(splits[k]) & rel["target"].isin(splits[k])].reset_index(drop=True)
-             for k in splits}
+    edges = {
+        k: rel[rel["source"].isin(splits[k]) & rel["target"].isin(splits[k])].reset_index(drop=True)
+        for k in splits
+    }
     logging.info("Relationship edges: train - %d | val - %d | test - %d",
                  len(edges["train"]), len(edges["val"]), len(edges["test"]))
 
@@ -386,7 +388,8 @@ def DatabaseTesting(args, db: str):
     logging.info("This may take a while …")
     tris = {
         k: sample_intra_split_triangles(
-            splits[k], edges[k], NUM_PER_CLASS if k == "train" else NUM_PER_CLASS // 8,
+            splits[k], edges[k],
+            NUM_PER_CLASS if k == "train" else NUM_PER_CLASS // 8,
             k_classes, args.threads, RNG_SEED,
         ) for k in splits
     }
@@ -401,14 +404,30 @@ def DatabaseTesting(args, db: str):
 
     logging_header("Training Edge Predictor")
     logging.info(f"Utilizing {device} for training!")
+
+    best_val_loss = float("inf")
+    best_model_state = None
+
     for ep in range(1, EPOCHS + 1):
         trL, trH, trA, _ = run_epoch(model, ld["train"], k_classes, nr_code, opt, cpu_flag=args.cpu)
         vaL, vaH, vaA, _ = run_epoch(model, ld["val"], k_classes, nr_code, cpu_flag=args.cpu)
+
+        if vaL < best_val_loss:
+            best_val_loss = vaL
+            best_model_state = model.state_dict()
+
         logging.info("Ep%02d  train L=%.3f hit=%.3f acc=%.3f   val L=%.3f hit=%.3f acc=%.3f",
                      ep, trL, trH, trA, vaL, vaH, vaA)
 
+    if best_model_state is not None:
+        model.load_state_dict(best_model_state)
+        logging.info("Restored best model with val loss = %.4f", best_val_loss)
+
     # Final evaluation
-    results = {k: run_epoch(model, ld[k], k_classes, nr_code, collect_cm=True, cpu_flag=args.cpu) for k in ("train", "val", "test")}
+    results = {
+        k: run_epoch(model, ld[k], k_classes, nr_code, collect_cm=True, cpu_flag=args.cpu)
+        for k in ("train", "val", "test")
+    }
     levels = list(score_config[db])[:k_classes]
 
     for split, (_, _, _, CM) in results.items():
@@ -434,6 +453,7 @@ def DatabaseTesting(args, db: str):
                              lvl, m["precision"], m["recall"], m["f1"], m["support"])
             logging.info("  Spearman rho=%0.3f, Kendall tau=%0.3f",
                          extra["spearman_rho"], extra["kendall_tau"])
+
     logging_header("Finished %s database", db)
 
 
