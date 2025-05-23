@@ -1,13 +1,16 @@
 /********************************************************************
  *  hypergeom.cpp  ―  genome-pair hyper-geometric test (global U)
- *                    output =  c / min(a,b)  when p ≤ α, else 0
+ *                    output = (return_log ? –log10 p : c/min(a,b))
  *
  *    • Global universe  U = |keep|
- *    • Weight formula   c/min(a,b)   instead of −log10 p
- *    • Direct NumPy allocation (no capsule needed)
+ *    • Weight formula
+ *        –log10 p              if return_log == true  and p ≤ α
+ *        c/min(a,b)  ∈ (0,1]   if return_log == false and p ≤ α
+ *        0                     otherwise
  *******************************************************************/
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+
 #include <vector>
 #include <cmath>
 #include <cstdint>
@@ -16,6 +19,7 @@
 #ifdef _OPENMP
   #include <omp.h>
 #endif
+
 namespace py = pybind11;
 
 /* ---------- popcount -------------------------------------------------- */
@@ -48,7 +52,7 @@ make_rows(const bool* data, int G, int P, const std::vector<int>& keep)
 }
 
 static inline int intersect(const std::vector<uint64_t>& a,
-                             const std::vector<uint64_t>& b)
+                            const std::vector<uint64_t>& b)
 {
     int s = 0, n = static_cast<int>(a.size());
     for (int i = 0; i < n; ++i) s += pop64(a[i] & b[i]);
@@ -96,7 +100,8 @@ py::array_t<double>
 compute_hypergeom(py::array_t<bool> pa,
                   int    nthreads     = 1,
                   double pval_thresh  = 0.01,
-                  double max_freq     = 0.8)
+                  double max_freq     = 0.8,
+                  bool   return_log   = false)   // NEW
 {
     /* ---- input checks ---------------------------------------- */
     auto buf = pa.request();
@@ -153,7 +158,12 @@ compute_hypergeom(py::array_t<bool> pa,
             double log_tail = log_hyper_tail(c, a, b, U);
             if (log_tail > log_alpha || !std::isfinite(log_tail)) continue;
 
-            double weight = static_cast<double>(c) / std::min(a, b);  // (0,1]
+            double weight;
+            if (return_log)
+                weight = -log_tail / std::log(10.0);             // –log10 p
+            else
+                weight = static_cast<double>(c) / std::min(a, b); // ratio
+
             out[static_cast<size_t>(i) * G + j] =
             out[static_cast<size_t>(j) * G + i] = weight;
         }
@@ -166,19 +176,23 @@ PYBIND11_MODULE(hypergeom, m)
 {
     m.doc() =
         "Pair-specific hyper-geometric tail (global universe).\n"
-        "Returns  c/min(a,b)  if  p ≤ α, otherwise 0.";
+        "Returns either c/min(a,b) or –log10 p depending on return_log.";
 
     m.def("compute_hypergeom", &compute_hypergeom,
           py::arg("matrix_in"),
           py::arg("nthreads")    = 1,
           py::arg("pval_thresh") = 0.01,
           py::arg("max_freq")    = 0.8,
-          R"pbdoc(
+          py::arg("return_log")  = false,   // NEW
+R"pbdoc(
 matrix_in   : bool ndarray (genomes × proteins)
-pval_thresh : α  (default 0.01)
+nthreads    : OpenMP thread count
+pval_thresh : α for the one-sided tail test (default 0.01)
 max_freq    : discard proteins in > max_freq·G genomes
+return_log  : if True, output –log10(p) instead of c/min(a,b)
 
-Weight(i,j) = shared / min(k_i, k_j)  ∈ (0,1]   if p-value ≤ α
-            = 0                                  otherwise
+Weight(i,j) = –log10(p)              if return_log and p ≤ α
+            = c/min(a,b)   ∈ (0,1]   if !return_log and p ≤ α
+            = 0                     otherwise
 )pbdoc");
 }

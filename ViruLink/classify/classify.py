@@ -232,19 +232,8 @@ def build_rel_bounds(meta_df: pd.DataFrame,
               [["source", "target", "lower", "upper"]])
     
     
-
 def ClassifyHandler(arguments, classes_df):
-    """
-    Fast classifier for ViruLink.
 
-    * Neighbour search is fully O(1):
-        – top-k (k = 50) adjacency lists  
-        – pre-computed “best single edge” per node  
-        – cosine fallback only if **both** slots are still empty  
-    * If only **one** neighbour is ultimately found, it is reused for both
-      reference positions (triangle refs may be identical – allowed). 
-    * Remaining pipeline (train/val, fine-tune, reconciliation) unchanged.
-    """
 
     # ───────────────────────── 0 · housekeeping ─────────────────────────
     qids     = validate_query(arguments.query)
@@ -265,7 +254,7 @@ def ClassifyHandler(arguments, classes_df):
     class_data = arguments.database
     meta = pd.read_csv(f"{arguments.database_loc}/{class_data}/{class_data}.csv")
 
-    # 1.a HYP graph
+    # 1.a presence/absence matrix
     VOGDB_dmnd = generate_database("VOGDB", VOGDB_path)
     m8_file = DiamondSearchDB(VOGDB_dmnd, arguments.query, tmp_path,
                               threads=arguments.threads, force=True)
@@ -273,8 +262,20 @@ def ClassifyHandler(arguments, classes_df):
     pa_query  = m8_processor(m8_file, class_data, arguments.eval, arguments.bitscore)
     pa_db     = edge_list_to_presence_absence(db_edge_txt)
     merged_pa = merge_presence_absence(pa_query, pa_db)
-    src, dst, wts = create_graph(compute_hypergeom_weights(merged_pa, arguments.threads), 0.0)
-    hyp = pd.DataFrame({"source": src, "target": dst, "weight": wts})
+
+    # 1.a-1  ratio-weighted HYP graph  (embeddings / model edge features)
+    ratio_mat = compute_hypergeom_weights(merged_pa, nthreads=arguments.threads, hypergeom=False)
+    src_r, dst_r, wts_r = create_graph(ratio_mat, 0.0)
+    hyp = pd.DataFrame({"source": src_r, "target": dst_r, "weight": wts_r})
+
+    # 1.a-2  –log10-p HYP graph  (neighbour search)
+    log_mat = compute_hypergeom_weights(
+        merged_pa, nthreads=arguments.threads, hypergeom=True)
+    src_l, dst_l, wts_l = create_graph(log_mat, 0.0)
+    hyp_adj_df = pd.DataFrame({"source": src_l, "target": dst_l, "weight": wts_l})
+
+    # *** FIX ***  — strip version suffixes so IDs agree with everything else
+    hyp_adj_df = process_graph(remove_version(hyp_adj_df))
 
     # 1.b ANI graph
     logging_header("Adding query sequences to ANI graph")
@@ -354,7 +355,6 @@ def ClassifyHandler(arguments, classes_df):
             best_valL = vaL
             torch.save(model.state_dict(), BEST_PATH)
 
-    # confusion matrix on held-out val
     _, _, _, cm = run_epoch(model, ld_val, K_CLASSES, NR_CODE,
                             collect_cm=True, cpu_flag=arguments.cpu)
     if cm is not None:
@@ -363,7 +363,6 @@ def ClassifyHandler(arguments, classes_df):
                      index=list(score_config[class_data]),
                      columns=list(score_config[class_data])).to_string())
 
-    # Phase-B fine-tune
     logging_header("Phase B – fine-tune on train+val")
     model.load_state_dict(torch.load(BEST_PATH))
     opt = torch.optim.Adam(model.parameters(), lr=LR * 0.1)
@@ -380,7 +379,9 @@ def ClassifyHandler(arguments, classes_df):
         for s, t, w in df[["source", "target", "weight"]].itertuples(False):
             d[(s, t)] = w; d[(t, s)] = w
         return d
-    ani_w, hyp_w = _lut(ani), _lut(hyp)
+    ani_w     = _lut(ani)           # ANI weights
+    hyp_w     = _lut(hyp)           # HYP ratio weights
+    hyp_adj_w = _lut(hyp_adj_df)    # HYP –log10 p weights (search)
 
     def _build_adj(tbl, k=50):
         adj = {}
@@ -388,16 +389,14 @@ def ClassifyHandler(arguments, classes_df):
             if u != v:
                 adj.setdefault(u, []).append((w, v))
                 adj.setdefault(v, []).append((w, u))
-        # sort once
         return {n: [v for w, v in sorted(lst, key=lambda x: -x[0])[:k]]
                 for n, lst in adj.items()}
-    adj_hyp, adj_ani = _build_adj(hyp_w), _build_adj(ani_w)
+    adj_hyp, adj_ani = _build_adj(hyp_adj_w), _build_adj(ani_w)
 
-    # pre-compute best single-edge neighbour (1st in already-sorted list)
     best_hyp = {n: lst[0] for n, lst in adj_hyp.items() if lst}
     best_ani = {n: lst[0] for n, lst in adj_ani.items() if lst}
 
-    # cosine fallback matrices (skip nodes lacking that embedding)
+    # cosine fallback matrices
     hyp_ids = np.array([n for n in all_nodes if n in hyp_emb])
     hyp_mat = np.stack([hyp_emb[n] for n in hyp_ids])
     hyp_mat /= np.linalg.norm(hyp_mat, axis=1, keepdims=True) + 1e-12
@@ -447,37 +446,46 @@ def ClassifyHandler(arguments, classes_df):
 
     for q_full in qids:
         q = q_full.split('.')[0]
+        sel_hyp = sel_ani = None
 
-        # 1️⃣ adjacency (fast O(1))
+        # 1️⃣ adjacency
         r_hyp = next((n for n in adj_hyp.get(q, []) if n not in bad_nodes), None)
+        if r_hyp is not None: sel_hyp = "hypergeom_adj"
         r_ani = next((n for n in adj_ani.get(q, []) if n not in bad_nodes and n != r_hyp), None)
+        if r_ani is not None: sel_ani = "ani_adj"
 
-        # 2️⃣ best-edge per node (O(1))
+        # 2️⃣ best edge
         if r_hyp is None:
             r_hyp = best_hyp.get(q)
-            if r_hyp in bad_nodes: r_hyp = None
+            if r_hyp and r_hyp not in bad_nodes:
+                sel_hyp = "best_edge"
+            else:
+                r_hyp = None
         if r_ani is None or r_ani == r_hyp:
             r_ani = best_ani.get(q)
-            if r_ani in bad_nodes or r_ani == r_hyp: r_ani = None
+            if r_ani and r_ani not in bad_nodes and r_ani != r_hyp:
+                sel_ani = "best_edge"
+            else:
+                r_ani = None
 
-        # 3️⃣ cosine fallback
+        # 3️⃣ cosine
         if (r_hyp is None or r_ani is None or r_hyp == r_ani) and q in hyp_emb:
             q_vec = hyp_emb[q] / (np.linalg.norm(hyp_emb[q]) + 1e-12)
             sims = hyp_mat @ q_vec
             for n in hyp_ids[np.argsort(-sims)]:
                 if n in bad_nodes or n == q: continue
                 if r_hyp is None:
-                    r_hyp = n
+                    r_hyp = n; sel_hyp = "cosine"
                 elif r_ani is None:
-                    r_ani = n
+                    r_ani = n; sel_ani = "cosine"
                     break
 
-        # 4️⃣ still missing? reuse the one we do have
+        # 4️⃣ reuse
         if r_hyp is None and r_ani is not None:
-            r_hyp = r_ani
+            r_hyp = r_ani; sel_hyp = "reuse"
         if r_ani is None and r_hyp is not None:
-            r_ani = r_hyp
-        if r_hyp is None:  # nothing at all
+            r_ani = r_hyp; sel_ani = "reuse"
+        if r_hyp is None:
             logging.warning("Query %s skipped – neighbours not found", q_full)
             continue
 
@@ -507,6 +515,12 @@ def ClassifyHandler(arguments, classes_df):
             "query"                       : q_full,
             "closest_node_1"              : r_hyp,
             "closest_node_2"              : r_ani,
+            "neighbor_source_node1"       : sel_hyp,
+            "neighbor_source_node2"       : sel_ani,
+            "ani_edge_node1"              : ani_w.get((q, r_hyp), np.nan),
+            "hyp_edge_node1"              : hyp_w.get((q, r_hyp), np.nan),
+            "ani_edge_node2"              : ani_w.get((q, r_ani), np.nan),
+            "hyp_edge_node2"              : hyp_w.get((q, r_ani), np.nan),
             "initial_relationship_node1"  : init_rel_1,
             "initial_pred_prob_node1"     : prob1,
             "initial_relationship_node2"  : init_rel_2,
@@ -522,6 +536,10 @@ def ClassifyHandler(arguments, classes_df):
     logging_header("Classification results")
     logging.info(df.to_string(index=False))
     df.to_csv(arguments.output, index=False)
+
+
+
+
 
 
 

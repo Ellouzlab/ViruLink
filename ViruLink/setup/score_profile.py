@@ -1,10 +1,9 @@
 score_config = {
     "Caudoviricetes": {
         "NR":0,
-        "Order":1,
-        "Family":2,
-        "Subfamily":3,
-        "Genus":4
+        "Family":1,
+        "Subfamily":2,
+        "Genus":3
     },
     "Herviviricetes": {
         "NR":0,

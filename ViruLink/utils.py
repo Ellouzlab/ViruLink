@@ -227,44 +227,53 @@ def edge_list_to_presence_absence(edge_list_path):
 
 
 
-def compute_hypergeom_weights(pa_matrix: pd.DataFrame,
-                              nthreads: int = 1,
-                              pval_thresh: float = 0.1,
-                              max_freq: float = 0.80) -> pd.DataFrame:
+
+def compute_hypergeom_weights(
+        pa_matrix: pd.DataFrame,
+        nthreads: int,
+        pval_thresh: float = 0.1,
+        max_freq: float = 0.80,
+        hypergeom: bool = False          # NEW
+) -> pd.DataFrame:
     """
-    Compute the shared-protein weight matrix for all genome pairs.
+    Compute a genome-pair weight matrix from a presence/absence table
+    using a one-sided hyper-geometric tail test.
 
     Parameters
     ----------
     pa_matrix : DataFrame [G × P] (bool / 0-1)
         Presence/absence matrix: rows = genomes, columns = proteins.
-    nthreads : int
+    nthreads : int, default 1
         OpenMP thread count for the C++ kernel.
-    pval_thresh : float
-        One-sided hyper-geometric tail threshold (default 0.01).
-    max_freq : float
-        Columns present in > max_freq * G genomes are discarded
-        before any calculation (default 0.80).
+    pval_thresh : float, default 0.1
+        Significance level α for the one-sided test.
+    max_freq : float, default 0.80
+        Discard proteins present in > max_freq × G genomes.
+    hypergeom : bool, default False
+        • False → weight = c / min(k_i, k_j)  (0,1]   (original behaviour)  
+        • True  → weight = –log10(p-value)          (0 on non-significant pairs)
 
     Returns
     -------
     DataFrame [G × G] (float)
-        Symmetric matrix with entries
-            0                       if p-value  > pval_thresh
-            c / min(k_i, k_j) (0,1] if p-value ≤ pval_thresh
+        Symmetric weight matrix.
     """
-    # --- call the kernel -------------------------------------------------
-    from ViruLink.hypergeom import hypergeom
+    # --- call the C++ kernel --------------------------------------------
+    from ViruLink.hypergeom import hypergeom as _hyper_mod
+
     bool_array = np.ascontiguousarray(pa_matrix.values.astype(bool))
 
-    w_mat = hypergeom.compute_hypergeom(bool_array,
-                                        nthreads=nthreads,
-                                        pval_thresh=pval_thresh,
-                                        max_freq=max_freq)
+    w_mat = _hyper_mod.compute_hypergeom(
+        bool_array,
+        nthreads=nthreads,
+        pval_thresh=pval_thresh,
+        max_freq=max_freq,
+        return_log=hypergeom         # NEW
+    )
 
     # --- diagnostics -----------------------------------------------------
     total_pairs   = (w_mat.size - w_mat.shape[0]) // 2
-    nonzero_pairs = (w_mat > 0).sum()             // 2
+    nonzero_pairs = int((w_mat > 0).sum() // 2)
     zero_pairs    = total_pairs - nonzero_pairs
 
     print("[hypergeom] total genome pairs        :", total_pairs)
