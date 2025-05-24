@@ -30,7 +30,7 @@ In the near future any-contig-to-genus-level classification will become availabl
 2. **Create a Conda/Mamba environment**
 
    ```bash
-   mamba create -n ViruLink python=3.12 "bioconda::diamond>=2" "bioconda::skani=0.2.2"
+   mamba create -n ViruLink python=3.12 "bioconda::diamond>=2" "bioconda::skani=0.2.2" "mmseqs2>16"
    ```
 
 3. **Activate the environment**
