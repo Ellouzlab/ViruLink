@@ -4,15 +4,6 @@
 It currently supports:
 
 - **Caudoviricetes**  
-- **Monjiviricetes**  
-- **Herviviricetes**
-- **Leviviricetes** (struggles to differentiate between Family and Genus)
-- **Repensiviricetes**
-- **Arfiviricetes**
-- **Megaviricetes** (struggles to differentiate between Genus and Species, as such Species toggled off)
-- **Revtraviricetes**
-- **Faserviricetes**
-- **Malgrandaviricetes**
 
 In the near future any-contig-to-genus-level classification will become available for all viruses! 
 
