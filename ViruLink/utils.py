@@ -197,19 +197,27 @@ def get_file_path(unproc_path, ext, multi=False):
             return all_paths[0]
     return all_paths
 
-def edge_list_to_presence_absence(edge_list_path):
+def edge_list_to_presence_absence(edge_list_path=None, edge_list=None):
     """
-    Converts an edge list into a presence-absence matrix.
-    
-    Parameters:
-        edge_list_path (str): Path to the edge list file. The file should have two columns: query and target.
-        
-    Returns:
-        pd.DataFrame: A presence-absence matrix where rows are queries, columns are targets,
-                      and values are 1 (presence) or 0 (absence).
+    Convert an edge list to a presence-absence matrix using pandas.
+    Parameters
+    ----------
+    edge_list_path : str, optional
+        Path to the edge list file in TSV format with columns: query, target, qstart, qend.
+        If None, will use the provided DataFrame `df`.
+    df : pd.DataFrame, optional
+        DataFrame containing the edge list with columns: query, target, qstart, qend.
+        If provided, `edge_list_path` will be ignored.
+    Returns
+    -------
+    pd.DataFrame
+        A presence-absence matrix where rows are queries and columns are targets,
+        with 1 indicating presence and 0 indicating absence.
     """
     # Read the edge list
-    edge_list = pd.read_csv(edge_list_path, sep="\t", header=None, names=["query", "target", "qstart", "qend"])
+    if not edge_list_path==None:
+        edge_list = pd.read_csv(edge_list_path, sep="\t", header=None, names=["query", "target", "qstart", "qend"])
+
     edge_list = edge_list[["query", "target"]]
     
     # Create a presence-absence matrix using pandas pivot_table
@@ -218,7 +226,6 @@ def edge_list_to_presence_absence(edge_list_path):
                                .pivot_table(index="query", columns="target", values="presence", fill_value=0)
                               )
     
-    # Optional: Reset the column names for cleaner formatting
     presence_absence_matrix.columns.name = None
     presence_absence_matrix.index.name = None
 
@@ -476,8 +483,14 @@ def plot_tsne_embeddings(emb_dict):
 
 
 def logging_header(message: str, *args, width: int = 70):
+    # Set colors
+    # Pink
+    PINK = "\033[95m"
+    # Reset color
+    RESET = "\033[0m"
+    
     formatted = message % args if args else message
     centered = f" {formatted.upper()} ".center(width, "=")
-    logging.info("=" * width)
+    logging.info(f"\n{PINK}{"=" * width}")
     logging.info(centered)
-    logging.info("=" * width)
+    logging.info(f"{"=" * width}{RESET}")

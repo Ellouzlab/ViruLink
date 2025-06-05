@@ -75,24 +75,63 @@ def ultra_tri_loss(la: torch.Tensor,
                    lh: torch.Tensor,
                    lr: torch.Tensor) -> torch.Tensor:
     """
-    Enforces the rooted ultrametric condition
+    Enforces the general ultrametric condition by considering all three
+    possible rootings/base edges for the triplet (la, lh, lr).
+    The loss is minimized if any of the three ultrametric configurations are met.
 
-        S(q,r1) == S(q,r2) >= S(r1,r2)
+    Internally, S_k = P(rank ≥ k) = σ(logit_k) is used.
+    The condition aims for two S values to be equal and >= the third S value.
+    (e.g. S_arm1 = S_arm2 >= S_base)
 
-    where S_k = P(rank ≥ k) = σ(logit_k).
+    Args:
+        la (torch.Tensor): Cumulative logits for edge 'a' (e.g., q-r1). Shape [B, K]
+        lh (torch.Tensor): Cumulative logits for edge 'h' (e.g., q-r2). Shape [B, K]
+        lr (torch.Tensor): Cumulative logits for edge 'r' (e.g., r1-r2). Shape [B, K]
+
+    Returns:
+        torch.Tensor: Scalar mean loss over the batch.
     """
-    Sa = torch.sigmoid(la)   # cumulative probs: (q , r1)
-    Sh = torch.sigmoid(lh)   # cumulative probs: (q , r2)
-    Sr = torch.sigmoid(lr)   # cumulative probs: (r1, r2)
+    Sa = torch.sigmoid(la)   # Cumulative probabilities for edge 'a'
+    Sh = torch.sigmoid(lh)   # Cumulative probabilities for edge 'h'
+    Sr = torch.sigmoid(lr)   # Cumulative probabilities for edge 'r'
 
-    # equality term
-    eq_loss  = (Sa - Sh).pow(2).mean(1)
+    # --- Calculate loss for each of the 3 possible ultrametric configurations ---
 
-    # ordering term  (sign fixed)
-    ord_loss = (F.relu(Sr - Sa).pow(2).mean(1) +   # Sr should not exceed Sa
-                F.relu(Sr - Sh).pow(2).mean(1))    # Sr should not exceed Sh
+    # Configuration 1: Sr is the "base" (Sa == Sh >= Sr)
+    # This means S(r1,r2) is the smallest similarity (longest distance),
+    # and S(q,r1) and S(q,r2) are equal and larger.
+    eq_loss_sr_base = (Sa - Sh).pow(2)  # Sa should equal Sh
+    # Sr should be less than or equal to Sa, and less than or equal to Sh
+    ord_loss_sr_base = F.relu(Sr - Sa).pow(2) + F.relu(Sr - Sh).pow(2) 
+    loss_config1 = (eq_loss_sr_base + ord_loss_sr_base).mean(dim=1) # Mean over K ranks for each sample
 
-    return (eq_loss + ord_loss).mean()
+    # Configuration 2: Sh is the "base" (Sa == Sr >= Sh)
+    # This means S(q,r2) is the smallest similarity,
+    # and S(q,r1) and S(r1,r2) are equal and larger.
+    eq_loss_sh_base = (Sa - Sr).pow(2)  # Sa should equal Sr
+    # Sh should be less than or equal to Sa, and less than or equal to Sr
+    ord_loss_sh_base = F.relu(Sh - Sa).pow(2) + F.relu(Sh - Sr).pow(2) 
+    loss_config2 = (eq_loss_sh_base + ord_loss_sh_base).mean(dim=1)
+
+    # Configuration 3: Sa is the "base" (Sh == Sr >= Sa)
+    # This means S(q,r1) is the smallest similarity,
+    # and S(q,r2) and S(r1,r2) are equal and larger.
+    eq_loss_sa_base = (Sh - Sr).pow(2)  # Sh should equal Sr
+    # Sa should be less than or equal to Sh, and less than or equal to Sr
+    ord_loss_sa_base = F.relu(Sa - Sh).pow(2) + F.relu(Sa - Sr).pow(2) 
+    loss_config3 = (eq_loss_sa_base + ord_loss_sa_base).mean(dim=1)
+    
+    # Stack the three possible loss configurations for each sample in the batch
+    # Shape of losses_stacked: [3, BatchSize]
+    losses_stacked = torch.stack([loss_config1, loss_config2, loss_config3], dim=0)
+    
+    # For each sample, find the minimum loss among the three configurations.
+    # The model is penalized based on the "best fit" ultrametric interpretation.
+    min_loss_per_sample, _ = torch.min(losses_stacked, dim=0)
+    
+    # Return the mean of these minimum losses over the batch
+    return min_loss_per_sample.mean()
+
 
 def CUM_TRE_LOSS(la: torch.Tensor,
                  lh: torch.Tensor,

@@ -62,5 +62,23 @@ score_config = {
     "Malgrandaviricetes": {
         "NR":0,
         "Genus":1
+        
+    },
+    "Orthornavirae": {
+        "NR":0,
+        "Phylum":0,
+        "Class":1,
+        "Order":2,
+        "Family":3,
+        "Subfamily":4,
+        "Genus":5,
+        "Species":6
+    },
+    "Lenarviricota": {
+        "NR":0,
+        "Class":1,
+        "Order":2,
+        "Family":3,
+        "Genus":4
     },
 }

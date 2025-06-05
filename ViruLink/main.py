@@ -57,7 +57,7 @@ def main():
         
         init_logging(f"{log_path}/classify.log")
         from ViruLink.classify.classify import ClassifyHandler
-        ClassifyHandler(arguments, classes_df)
+        ClassifyHandler(arguments)
         
         
     if arguments.command == "single_use":

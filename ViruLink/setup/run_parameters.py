@@ -3,7 +3,7 @@ parameters = {
     "p": 2,
     "q": 0.5,
     "walks_per_node": 100,
-    "embedding_dim": 64,
+    "embedding_dim": 128,
     "window": 5,
     "epochs": 5
 }
