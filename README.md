@@ -126,7 +126,7 @@ Classification times hover around 30s (except Caudoviricetes, which is closer to
 ## Configuration
 
 To change which taxonomic ranks are predicted, edit the files in  
-`ViruLink/setup/score_profiles.py`.
+`ViruLink/default_yaml.py`. A custom yaml system will be added soon.
 
 ---
 
