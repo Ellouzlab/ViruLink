@@ -23,6 +23,8 @@ dependencies = [
     "gdown",
     "networkx",
     "glob2",
+    "PyYAML",
+    "psutil",
     "gensim>=4.3.3"
 ]
 

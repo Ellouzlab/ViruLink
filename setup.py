@@ -35,6 +35,13 @@ ext_modules = [
         "ViruLink.sampler.triangle_sampler",
         ["ViruLink/sampler/triangle_sampler.cpp"],
     ),
+    
+    Pybind11Extension(
+        "ViruLink.ani.ani_calc",
+        ["ViruLink/ani/ani_calc.cpp"],
+        extra_compile_args=["-O3", "-march=native", "-fopenmp"],
+        extra_link_args=["-fopenmp"],
+    ),
 ]
 
 
@@ -58,6 +65,8 @@ setup(
         "gdown",
         "networkx",
         "glob2",
+        "PyYAML",
+        "psutil",
         "gensim>=4.3.3"
     ],
     python_requires=">=3.10",
